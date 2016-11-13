@@ -22,6 +22,8 @@ Please do not contact me to assist with solving individual levels.
 
 Created by: David Joffe http://djoffe.com/
 
+![Sokoban Screenshot](http://grayskygames.com/sokoban/gallery/SYA%20Sokoban.png)
+
 # Developer Info / Build Info
 
 Dependencies:  LibSDL1.2 http://libsdl.org/
