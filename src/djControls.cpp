@@ -28,7 +28,6 @@ void djTextEdit::SetText(const char *szLabel, const char *szDefaultValue)
 	m_sText = "";
 	m_szLabel = djStrDup(szLabel);
 	m_sText = szDefaultValue;
-	m_nPos = 0;
 	m_nPos = m_sText.length();
 	m_fBlinkTimer = 0;
 	m_bConfirmed = false;
@@ -77,7 +76,7 @@ bool djTextEdit::OnEvent(SDL_Event &Event, SDLMod ModState)
 			}
 			return true;
 		case SDLK_DELETE:
-			if (m_nPos<(int)(m_sText.length()))
+			if (m_nPos<m_sText.length())
 				m_sText.erase(m_sText.begin() + m_nPos);
 			return true;
 

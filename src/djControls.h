@@ -76,7 +76,7 @@ protected:
 
 	char *m_szLabel;
 	std::string m_sText;
-	int m_nPos;
+	unsigned int m_nPos;
 	UINT m_uMaxLen;
 	float m_fBlinkTimer;
 	bool m_bConfirmed;
