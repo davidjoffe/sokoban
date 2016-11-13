@@ -1426,9 +1426,8 @@ void CSokoban::AddCompletedLevel(int nLevelNum)
 			// FIXME: THIS IS REALLY JUNKY
 			std::vector<int> anIndex;
 			std::vector<int> anNumMoves;
-			int i;
 			//for ( i=0; i<90; i++ )
-			for ( i=0; i<GetNumLevels(); i++ )
+			for ( int i=0; i<(int)GetNumLevels(); i++ )
 			{
 				if (IsLevelCompleted(i))
 				{
@@ -1437,9 +1436,9 @@ void CSokoban::AddCompletedLevel(int nLevelNum)
 				}
 			}
 			char szNewSettingString[65536] = { 0 };
-			for ( i=0; i<anIndex.size(); i++ )
+			for ( int i=0; i<(int)anIndex.size(); i++ )
 			{
-				char szBuf[256];
+				char szBuf[256]={0};
 				sprintf(szBuf, "%d.%d.", anIndex[i], anNumMoves[i]);
 				strcat(szNewSettingString, szBuf);
 			}
@@ -1660,11 +1659,10 @@ void CLevelManager::AddLevelSet(
 
 int CLevelManager::FindLevelSetDescriptorIndex(const char *szFilename) const
 {
-	int i;
-	for ( i=0; i<m_aLevelSets.size(); i++ )
+	for ( unsigned i=0; i<m_aLevelSets.size(); i++ )
 	{
 		if (!djStrCaseCmp(m_aLevelSets[i].sLevelFile.c_str(), szFilename))
-			return i;
+			return (int)i;
 	}
 	return -1;
 }
