@@ -1,0 +1,94 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{d83a2ca2-7c13-4c69-af70-99e3f40a8114}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;idl;hpj;bat</Extensions>
+    </Filter>
+    <Filter Include="Sokoban">
+      <UniqueIdentifier>{772f1247-d418-457c-b177-009d44ee16f9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Framework">
+      <UniqueIdentifier>{03884c18-99a2-44c3-b1f9-9b865e953eb3}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\Game.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\GameRegistry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Games.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Sokoban.cpp">
+      <Filter>Sokoban</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\djControls.cpp">
+      <Filter>Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\djDesktop.cpp">
+      <Filter>Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\djFont.cpp">
+      <Filter>Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\djGraph.cpp">
+      <Filter>Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\djItem.cpp">
+      <Filter>Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\djMenu.cpp">
+      <Filter>Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\djSettings.cpp">
+      <Filter>Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\djUtils.cpp">
+      <Filter>Framework</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\Game.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\GameRegistry.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Games.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Sokoban.h">
+      <Filter>Sokoban</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\djControls.h">
+      <Filter>Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\djDesktop.h">
+      <Filter>Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\djFont.h">
+      <Filter>Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\djGraph.h">
+      <Filter>Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\djItem.h">
+      <Filter>Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\djMenu.h">
+      <Filter>Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\djSettings.h">
+      <Filter>Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\djUtils.h">
+      <Filter>Framework</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
