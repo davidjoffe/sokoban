@@ -143,7 +143,7 @@ void djFindFiles(const char *szDirectory, const char *szWildcard, std::vector<st
 	}
 
 	struct dirent* entry = (dirent *)NULL;
-	while (entry = readdir(dir))
+	while ((entry = readdir(dir)))
 	{
 		if (entry->d_name)
 		{
