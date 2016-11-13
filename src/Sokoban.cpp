@@ -1082,7 +1082,8 @@ void CSokoban::SetShowingAbout(bool b)
 	if (!b)
 	{
 		m_bShowingAbout = false;
-		djDEL(m_pAbout);
+		if (m_pAbout) SDL_FreeSurface(m_pAbout);
+		m_pAbout = NULL;
 	}
 	else
 	{
