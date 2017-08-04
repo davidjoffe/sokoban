@@ -56,6 +56,9 @@ Same as Linux - type 'make'. Run with ./syasokoban if it built correctly.
 * Fix possible crash on press Esc in About window
 * Create new github source code repo for the project: https://github.com/davidjoffe/sokoban
 
+2.0.1(d)        4 Aug 2017
+                Nearly identical to v2.0.1(c), plus Windows compile fix
+
 2.0.1(c)        8 Oct 2016
                 Identical release to v2.0.1(b), plus some Linux compile fixes
 
