@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 // djSettings.h
 //
-// Copyright (C) 2001-2007 David Joffe
+// Copyright (C) 2001-2018 David Joffe
 // http://grayskygames.com/
 //---------------------------------------------------------------------------
 /*
@@ -16,12 +16,13 @@ Both key and value are text strings.
 #define _DJSETTINGS_H_
 
 #include <vector>
+#include <string>
 
 class CdjSettings;
 
 extern void CommitSettings();
 
-extern char g_szConfigFile[2048];
+extern std::string g_sConfigFile;
 
 //! Global settings
 extern CdjSettings g_Settings;

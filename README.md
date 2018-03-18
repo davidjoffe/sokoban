@@ -56,6 +56,9 @@ Same as Linux - type 'make'. Run with ./syasokoban if it built correctly.
 * Fix possible crash on press Esc in About window
 * Create new github source code repo for the project: https://github.com/davidjoffe/sokoban
 
+2.0.2           18 Mar 2018
+                Basically same as v2.0.1(d), except on Windows, the game config file ".djgames" lives by default under e.g. "c:\Users\USERNAME\AppData\Roaming\GraySkyGames\" - this is to make the application lend itself to working as a full installed application under Windows. Previously, on Windows it saved the config file into the current folder (which if you extracted from the binary release zip file, would be in the same extracted folder as the application). If you want to load your settings (e.g. remembered-completed-levels) from v2.0.1, you must manually copy this ".djgames" file into the new AppData-based subfolder.
+
 2.0.1(d)        4 Aug 2017
                 Nearly identical to v2.0.1(c), plus Windows compile fix
 

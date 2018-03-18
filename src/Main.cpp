@@ -49,8 +49,26 @@ int main(int, char**)
 	}
 	*/
 
-	memset(g_szConfigFile, 0, sizeof(g_szConfigFile));
+	//memset(g_szConfigFile, 0, sizeof(g_szConfigFile));
+#ifdef WIN32
+	//dj2018-03
+	std::string s = getenv("APPDATA");
+	djAppendPathS(s, "GraySkyGames");
+	// Try create this folder. If it fails, then fall back to 'current folder' again.
+	// (I suspect it may fail if username has Unicode in it at the moment .. so in that case,
+	// probably better to have this fallback, so the user can still use portable .zip type of approach
+	// where it saves to current folder like it did before this 2018-03 change.)
+	djEnsureFolderTreeExists(s.c_str());
+	if (!djFolderExists(s.c_str()))
+		s = CONFIG_FILE;//Fallback 'old' behaviour - use 'current folder'
+	else
+		djAppendPathS(s, CONFIG_FILE);
+#else
+	std::string s = getenv("HOME");
+	djAppendPathS(s, CONFIG_FILE);
+#endif
 	// Isn't there a better way to do this? e.g. system call. I think this messes up with su'd users.
+	/*
 	char *szHome = getenv("HOME");
 	if (szHome)
 	{
@@ -58,6 +76,8 @@ int main(int, char**)
 		strcat(g_szConfigFile, "/");
 	}
 	strcat(g_szConfigFile, CONFIG_FILE);
+	*/
+	g_sConfigFile = s;
 	
 	// Initialize SDL
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)
@@ -68,7 +88,7 @@ int main(int, char**)
 	}
 
 	// Load settings
-	g_Settings.LoadSettings(g_szConfigFile);
+	g_Settings.LoadSettings(g_sConfigFile.c_str());
 
 	// Initialize desktop
 	g_pScreen = new CdjDesktop;
@@ -124,7 +144,7 @@ int main(int, char**)
 	djDEL(g_pScreen);
 
 	// Save setings
-	g_Settings.SaveSettings(g_szConfigFile);
+	g_Settings.SaveSettings(g_sConfigFile.c_str());
 
 	//if (pIcon) SDL_FreeSurface(pIcon);
 

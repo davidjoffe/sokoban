@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 // djUtils.h
 //
-// Copyright (C) 2002-2007 David Joffe
+// Copyright (C) 2002-2018 David Joffe
 // http://grayskygames.com/
 //---------------------------------------------------------------------------
 
@@ -54,5 +54,11 @@ extern bool djFileExists(const char *szFilename);
 //! Strip newline character from end of string (handles UNIX, Mac and DOS text file formats)
 extern void djStripCRLF(char *buf);
 
+
+extern void djAppendPathS(std::string& sPath,const char* szAppend);
+
+extern bool djFolderExists(const char* szPath);
+//extern bool djFileExists(const char* szPath);
+extern bool djEnsureFolderTreeExists(const char* szPath);
 
 #endif

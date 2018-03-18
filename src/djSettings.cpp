@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 // djSettings.cpp
 //
-// Copyright (C) 2001-2007 David Joffe
+// Copyright (C) 2001-2018 David Joffe
 // http://grayskygames.com/
 //---------------------------------------------------------------------------
 #include "djSettings.h"
@@ -10,12 +10,12 @@
 #include <string.h>
 #include <stdlib.h>
 
-char g_szConfigFile[2048] = { 0 };
+std::string g_sConfigFile;
 
 void CommitSettings()
 {
 	// Commit settings change
-	g_Settings.SaveSettings(g_szConfigFile);
+	g_Settings.SaveSettings(g_sConfigFile.c_str());
 }
 
 CdjSettings g_Settings;
