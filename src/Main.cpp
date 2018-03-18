@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 // Main.cpp
 //
-// Copyright (C) 2001-2007 David Joffe
+// Copyright (C) 2001-2018 David Joffe
 // http://grayskygames.com/
 //---------------------------------------------------------------------------
 
@@ -12,6 +12,8 @@
 #include <stdlib.h>
 #ifndef WIN32
 #include <unistd.h>
+#else
+#include <windows.h>//For WinMain() [dj2018-03]
 #endif
 
 bool g_bMustRedraw = true;
@@ -133,6 +135,18 @@ int main(int, char**)
 	
 	return 0;
 }
+
+#ifdef WIN32
+//dj2018-03 When building on VS2017 we get weird exceptions on application run (before it even hits main()) without this WinMain() wrapper
+int WINAPI WinMain(HINSTANCE hInstance,
+	HINSTANCE hPrevInstance,
+	PSTR szCmdLine,
+	int iCmdShow)
+{
+	// Just call standard "main" function
+	return main(__argc, __argv);
+}
+#endif
 
 int HeartBeat()
 {
