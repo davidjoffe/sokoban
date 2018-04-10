@@ -1,4 +1,4 @@
-# Stil Yet Another Sokoban
+# Still Yet Another Sokoban
 
 Download Page: http://grayskygames.com/sokoban.html
 
@@ -47,6 +47,10 @@ apt-get install libsdl1.2-dev
 ## Mac OS X Build Instructions
 
 Same as Linux - type 'make'. Run with ./syasokoban if it built correctly.
+
+# Ports
+
+* MorphOS [Mar 2018, by Bruno Peloille]: http://www.morphos-storage.net/?page=Games/Think&file=Sokoban_2.01.lha
 
 # History / Changes
 
