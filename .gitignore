@@ -1,0 +1,8 @@
+# dj2022 add a gitignore file
+
+# Temporary object files during build
+src/*.o
+
+# Main application binary
+syasokoban
+
