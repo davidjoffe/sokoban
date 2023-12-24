@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 // GameRegistry.h
 //
-// Copyright (C) 2002-2007 David Joffe
+// Copyright (C) 2002-2023 David Joffe
 // http://grayskygames.com/
 //---------------------------------------------------------------------------
 #ifndef _GAMEREGISTRY_H_
