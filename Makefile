@@ -1,7 +1,7 @@
 #
 # Makefile for syasokoban
-# Copyright (c) David Joffe, 2001-2023
-# http://djoffe.com/
+# Copyright (c) David Joffe, 2001-2024
+# https://djoffe.com/
 #
 # Note you need libsdl1.2 as dependency
 #
