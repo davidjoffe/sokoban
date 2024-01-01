@@ -1,8 +1,8 @@
 //---------------------------------------------------------------------------
 // Game.cpp
 //
-// Copyright (C) 2002-2023 David Joffe
-// http://grayskygames.com/
+// Copyright (C) 2002-2024 David Joffe
+// https://grayskygames.com/
 //---------------------------------------------------------------------------
 
 #include "Game.h"

@@ -1,8 +1,8 @@
 //---------------------------------------------------------------------------
 // djMenu.h
 //
-// Copyright (C) 2001-2023 David Joffe
-// http://grayskygames.com/
+// Copyright (C) 2001-2024 David Joffe
+// https://grayskygames.com/
 //---------------------------------------------------------------------------
 #ifndef _DJMENU_H_
 #define _DJMENU_H_

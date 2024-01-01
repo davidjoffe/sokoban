@@ -1,8 +1,8 @@
 //---------------------------------------------------------------------------
 // Games.cpp
 //
-// Copyright (C) 2002-2023 David Joffe
-// http://grayskygames.com/
+// Copyright (C) 2002-2024 David Joffe
+// https://grayskygames.com/
 //---------------------------------------------------------------------------
 
 // Register games in the game registry here.

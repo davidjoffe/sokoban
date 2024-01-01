@@ -1,8 +1,8 @@
 //---------------------------------------------------------------------------
 // djGraph.h
 //
-// Copyright (C) 2001-2023 David Joffe
-// http://grayskygames.com/
+// Copyright (C) 2001-2024 David Joffe
+// https://grayskygames.com/
 //---------------------------------------------------------------------------
 /*
 \file   djGraph.h

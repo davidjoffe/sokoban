@@ -1,8 +1,8 @@
 //---------------------------------------------------------------------------
 // djSettings.cpp
 //
-// Copyright (C) 2001-2023 David Joffe
-// http://grayskygames.com/
+// Copyright (C) 2001-2024 David Joffe
+// https://grayskygames.com/
 //---------------------------------------------------------------------------
 #include "djSettings.h"
 #include "djUtils.h"
@@ -36,7 +36,7 @@ CdjSettings::~CdjSettings()
 
 bool CdjSettings::LoadSettings(const char *szFilename)
 {
-	char buf[2048];
+	char buf[8192]={0};
 	FILE *pIn = fopen(szFilename, "r");
 	if (pIn==NULL)
 		return false;
@@ -100,21 +100,21 @@ void CdjSettings::SetSetting(const char *szKey, const char *szValue)
 
 void CdjSettings::SetSettingBool(const char *szKey, bool bValue)
 {
-	char szBuf[128];
+	char szBuf[128]={0};
 	sprintf(szBuf, "%d", bValue ? 1 : 0);
 	SetSetting(szKey, szBuf);
 }
 
 void CdjSettings::SetSettingInt(const char *szKey, int nValue)
 {
-	char szBuf[128];
+	char szBuf[128]={0};
 	sprintf(szBuf, "%d", nValue);
 	SetSetting(szKey, szBuf);
 }
 
 void CdjSettings::SetSettingFloat(const char *szKey, float fValue)
 {
-	char szBuf[128];
+	char szBuf[128]={0};
 	sprintf(szBuf, "%f", fValue);
 	SetSetting(szKey, szBuf);
 }
@@ -148,7 +148,7 @@ void CdjSettings::ClearAllSettings()
 	
 bool CdjSettings::GetSettingBool(const char *szKey, bool bDefaultValue)
 {
-	char *sz = FindSetting(szKey);
+	const char *sz = FindSetting(szKey);
 	if (sz==NULL || sz[0]==0)
 		return bDefaultValue;
 	if (sz[0]=='0' || sz[0]=='f' || sz[0]=='F' || sz[0]=='n' || sz[0]=='N')
@@ -158,7 +158,7 @@ bool CdjSettings::GetSettingBool(const char *szKey, bool bDefaultValue)
 
 int CdjSettings::GetSettingInt(const char *szKey, int nDefaultValue)
 {
-	char *sz = FindSetting(szKey);
+	const char *sz = FindSetting(szKey);
 	if (sz==NULL || sz[0]==0)
 		return nDefaultValue;
 	return atoi(sz);
@@ -166,7 +166,7 @@ int CdjSettings::GetSettingInt(const char *szKey, int nDefaultValue)
 
 float CdjSettings::GetSettingFloat(const char *szKey, float fDefaultValue)
 {
-	char *sz = FindSetting(szKey);
+	const char *sz = FindSetting(szKey);
 	if (sz==NULL || sz[0]==0)
 		return fDefaultValue;
 	return atof(sz);

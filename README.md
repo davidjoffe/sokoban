@@ -1,6 +1,6 @@
 # Still Yet Another Sokoban
 
-Download Page: http://grayskygames.com/sokoban.html
+Download Page: https://grayskygames.com/sokoban.html
 
 Official source code repo: https://github.com/davidjoffe/sokoban
 
@@ -22,7 +22,7 @@ Please do not contact me to assist with solving individual levels.
 
 Created by: David Joffe http://djoffe.com/
 
-![Sokoban Screenshot](http://grayskygames.com/sokoban/gallery/SYA%20Sokoban.png)
+![Sokoban Screenshot](https://grayskygames.com/sokoban/gallery/SYA%20Sokoban.png)
 
 # Developer Info / Build Info
 

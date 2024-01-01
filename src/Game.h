@@ -1,8 +1,8 @@
 //---------------------------------------------------------------------------
 // Game.h
 //
-// Copyright (C) 2002-2023 David Joffe
-// http://grayskygames.com/
+// Copyright (C) 2002-2024 David Joffe
+// https://grayskygames.com/
 //---------------------------------------------------------------------------
 #ifndef _GAME_H_
 #define _GAME_H_
