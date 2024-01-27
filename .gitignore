@@ -3,6 +3,13 @@
 # Temporary object files during build
 src/*.o
 
+# Temporary Visual Studio stuff
+/VS/.vs/*
+# Visual Studio local settings probably should not be in repo
+/VS/VS.vcxproj.user
+# Temporary build products
+/VS/Release/*
+
 # Main application binary
 syasokoban
 
