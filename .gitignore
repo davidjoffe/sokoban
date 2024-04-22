@@ -13,3 +13,7 @@ src/*.o
 # Main application binary
 syasokoban
 
+# Mac Finder droppings
+*.DS_Store
+
+
