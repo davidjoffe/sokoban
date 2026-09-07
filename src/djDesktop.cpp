@@ -33,18 +33,17 @@ CdjDesktop::~CdjDesktop()
 
 bool CdjDesktop::Initialize()
 {
-	InitSurface();
-	if (!m_pSurface)
+	if (InitWindowAndRenderer() != 0)
 		return false;
 
 	m_pFont = new CdjFont;
-	m_pFont->LoadFont((GetDataPath() + "font.bmp").c_str(), 8, 8);
+	m_pFont->LoadFont(m_pRenderer, (GetDataPath() + "font.bmp").c_str(), 8, 8);
 	m_pFont8x13 = new CdjFont;
-	m_pFont8x13->LoadFont((GetDataPath() + "font8x13.bmp").c_str(), 8, 13);
+	m_pFont8x13->LoadFont(m_pRenderer, (GetDataPath() + "font8x13.bmp").c_str(), 8, 13);
 	m_pFont8x13B = new CdjFont;
-	m_pFont8x13B->LoadFont((GetDataPath() + "font8x13bold.bmp").c_str(), 8, 13);
+	m_pFont8x13B->LoadFont(m_pRenderer, (GetDataPath() + "font8x13bold.bmp").c_str(), 8, 13);
 
-	SDL_ShowCursor(SDL_DISABLE);
+	SDL_HideCursor();
 	SetName("Desktop");
 
 	m_nHotspotX = 5;
@@ -52,83 +51,85 @@ bool CdjDesktop::Initialize()
 	return LoadMouseCursorA((GetDataPath() + "cursor2.bmp").c_str(), (GetDataPath() + "cursor2_a.bmp").c_str());
 }
 
-bool CdjDesktop::LoadMouseCursor(const char *szFilename)
-{
-	SDL_Surface *pSurface = SDL_LoadBMP(szFilename);
-	if (pSurface)
-	{
-		SDL_SetColorKey(pSurface, SDL_SRCCOLORKEY | SDL_RLEACCEL, SDL_MapRGB(pSurface->format, 255, 0, 255));
-		m_pCursor = SDL_DisplayFormat(pSurface);
-		SDL_FreeSurface(pSurface);
-		return true;
-	}
-	return false;
-}
-
 bool CdjDesktop::LoadMouseCursorA(const char *szFilename, const char *szAlphaFilename)
 {
 	SDL_Surface *pSurface = SDL_LoadBMP(szFilename);
-	if (pSurface)
+	SDL_Surface *pAlpha = SDL_LoadBMP(szAlphaFilename);
+	if (!pSurface || !pAlpha)
 	{
-		m_pCursor = SDL_DisplayFormatAlpha(pSurface);
-		SDL_FreeSurface(pSurface);
-		SDL_Surface *pAlpha = SDL_LoadBMP(szAlphaFilename);
-		if (!pAlpha)
-			return false;
-
-		SDL_LockSurface(pAlpha);
-		SDL_LockSurface(m_pCursor);
-		for (int i = 0; i < m_pCursor->h; ++i)
-		{
-			for (int j = 0; j < m_pCursor->w; ++j)
-			{
-				auto *pRow = reinterpret_cast<UINT*>(static_cast<char*>(m_pCursor->pixels) + i * m_pCursor->pitch);
-				unsigned char ucAlpha = *(reinterpret_cast<unsigned char*>(pAlpha->pixels) + i * pAlpha->pitch + j);
-				*(pRow + j) = (*(pRow + j) & 0x00FFFFFF) | (static_cast<UINT>(ucAlpha) << 24);
-			}
-		}
-		SDL_UnlockSurface(m_pCursor);
-		SDL_UnlockSurface(pAlpha);
-		SDL_FreeSurface(pAlpha);
-		return true;
+		if (pSurface) SDL_DestroySurface(pSurface);
+		if (pAlpha) SDL_DestroySurface(pAlpha);
+		return false;
 	}
-	return false;
+
+	SDL_Surface *pRGBA = SDL_ConvertSurface(pSurface, SDL_PIXELFORMAT_RGBA32);
+	SDL_DestroySurface(pSurface);
+	if (!pRGBA)
+	{
+		SDL_DestroySurface(pAlpha);
+		return false;
+	}
+
+	for (int i = 0; i < pRGBA->h; ++i)
+	{
+		for (int j = 0; j < pRGBA->w; ++j)
+		{
+			auto *pPixel = reinterpret_cast<Uint32*>(static_cast<char*>(pRGBA->pixels) + i * pRGBA->pitch + j * 4);
+			unsigned char ucAlpha = *(reinterpret_cast<unsigned char*>(pAlpha->pixels) + i * pAlpha->pitch + j);
+			*pPixel = (*pPixel & 0x00FFFFFF) | (static_cast<Uint32>(ucAlpha) << 24);
+		}
+	}
+	SDL_DestroySurface(pAlpha);
+
+	m_pCursor = SDL_CreateTextureFromSurface(m_pRenderer, pRGBA);
+	SDL_DestroySurface(pRGBA);
+
+	if (m_pCursor)
+	{
+		SDL_SetTextureScaleMode(m_pCursor, SDL_SCALEMODE_NEAREST);
+	}
+	return (m_pCursor != nullptr);
 }
 
 bool CdjDesktop::Destroy()
 {
 	if (m_pCursor)
 	{
-		SDL_FreeSurface(m_pCursor);
+		SDL_DestroyTexture(m_pCursor);
 		m_pCursor = nullptr;
 	}
-	delete m_pFont8x13;
-	m_pFont8x13 = nullptr;
+	delete m_pFont8x13; m_pFont8x13 = nullptr;
+	delete m_pFont8x13B; m_pFont8x13B = nullptr;
+	delete m_pFont; m_pFont = nullptr;
 
-	delete m_pFont8x13B;
-	m_pFont8x13B = nullptr;
-
-	delete m_pFont;
-	m_pFont = nullptr;
-
+	if (m_pRenderer)
+	{
+		SDL_DestroyRenderer(m_pRenderer);
+		m_pRenderer = nullptr;
+	}
+	if (m_pWindow)
+	{
+		SDL_DestroyWindow(m_pWindow);
+		m_pWindow = nullptr;
+	}
 	return true;
 }
 
-bool CdjDesktop::OnEvent(SDL_Event &Event, SDLMod ModState)
+bool CdjDesktop::OnEvent(SDL_Event &Event, SDL_Keymod ModState)
 {
-	if (Event.type == SDL_QUIT)
+	if (Event.type == SDL_EVENT_QUIT)
 	{
 		m_bRunning.store(false, std::memory_order_relaxed);
 		return true;
 	}
 
-	if (Event.type == SDL_MOUSEMOTION)
+	if (Event.type == SDL_EVENT_MOUSE_MOTION)
 	{
-		g_pScreen->SetMousePos(Event.motion.x, Event.motion.y);
+		g_pScreen->SetMousePos(static_cast<int>(Event.motion.x), static_cast<int>(Event.motion.y));
 		UpdateMouseAll(this);
 	}
 
-	if (Event.type == SDL_MOUSEBUTTONDOWN)
+	if (Event.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
 	{
 		switch (Event.button.button)
 		{
@@ -139,7 +140,7 @@ bool CdjDesktop::OnEvent(SDL_Event &Event, SDLMod ModState)
 		UpdateMouseButtonDownAll(this, Event.button.button);
 	}
 
-	if (Event.type == SDL_MOUSEBUTTONUP)
+	if (Event.type == SDL_EVENT_MOUSE_BUTTON_UP)
 	{
 		UpdateMouseButtonUpAll(this, Event.button.button);
 		switch (Event.button.button)
@@ -150,18 +151,17 @@ bool CdjDesktop::OnEvent(SDL_Event &Event, SDLMod ModState)
 		}
 	}
 
-	if (Event.type == SDL_KEYDOWN && Event.key.type == SDL_KEYDOWN)
+	if (Event.type == SDL_EVENT_KEY_DOWN)
 	{
-		switch (Event.key.keysym.sym)
+		switch (Event.key.key)
 		{
 		case SDLK_ESCAPE:
 			m_bRunning.store(false, std::memory_order_relaxed);
 			return true;
 		case SDLK_RETURN:
-			if ((ModState & KMOD_RALT) || (ModState & KMOD_LALT))
+			if ((ModState & SDL_KMOD_ALT) != 0)
 			{
 				SetFullScreen(!m_bFullScreen);
-				InitSurface();
 				return true;
 			}
 			break;
@@ -176,35 +176,32 @@ void CdjDesktop::SetFullScreen(bool bFullScreen)
 {
 	m_bFullScreen = bFullScreen;
 	g_Settings.SetSettingBool(SETTING_FULLSCREENMODE, m_bFullScreen);
+	if (m_pWindow)
+	{
+		SDL_SetWindowFullscreen(m_pWindow, m_bFullScreen);
+	}
 }
 
-int CdjDesktop::InitSurface()
+int CdjDesktop::InitWindowAndRenderer()
 {
-	if (m_pSurface) SDL_FreeSurface(m_pSurface);
-
 	constexpr int nWIDTH  = 800;
 	constexpr int nHEIGHT = 600;
-	constexpr int nDEPTH  = 32;
 
+	Uint32 flags = SDL_WINDOW_RESIZABLE;
 	if (m_bFullScreen)
 	{
-		m_pSurface = SDL_SetVideoMode(nWIDTH, nHEIGHT, nDEPTH, SDL_HWSURFACE | SDL_DOUBLEBUF | SDL_FULLSCREEN);
-		if (!m_pSurface)
-		{
-			m_pSurface = SDL_SetVideoMode(nWIDTH, nHEIGHT, nDEPTH, SDL_SWSURFACE | SDL_DOUBLEBUF | SDL_FULLSCREEN);
-			if (!m_pSurface)
-			{
-				SetFullScreen(false);
-				m_pSurface = SDL_SetVideoMode(nWIDTH, nHEIGHT, nDEPTH, SDL_SWSURFACE);
-			}
-		}
+		flags |= SDL_WINDOW_FULLSCREEN;
 	}
-	else
-	{
-		m_pSurface = SDL_SetVideoMode(nWIDTH, nHEIGHT, nDEPTH, SDL_HWSURFACE | SDL_DOUBLEBUF);
-		if (!m_pSurface)
-			m_pSurface = SDL_SetVideoMode(nWIDTH, nHEIGHT, nDEPTH, SDL_SWSURFACE | SDL_DOUBLEBUF);
-	}
+
+	m_pWindow = SDL_CreateWindow("Still Yet Another Sokoban", nWIDTH, nHEIGHT, flags);
+	if (!m_pWindow)
+		return -1;
+
+	m_pRenderer = SDL_CreateRenderer(m_pWindow, nullptr);
+	if (!m_pRenderer)
+		return -1;
+
+	SDL_SetRenderLogicalPresentation(m_pRenderer, nWIDTH, nHEIGHT, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 	SetSize(nWIDTH, nHEIGHT);
 	return 0;
 }
@@ -224,7 +221,7 @@ void CdjDesktop::DrawWidgetDebugInfo(CdjItem *pItem, int nScreenX, int nScreenY)
 {
 	if (pItem->m_nW > 0 && pItem->m_nH > 0)
 	{
-		djDrawRect(m_pSurface, nScreenX, nScreenY, pItem->m_nW, pItem->m_nH, SDL_MapRGB(m_pSurface->format, 255, 255, 255));
+		djDrawRect(m_pRenderer, nScreenX, nScreenY, pItem->m_nW, pItem->m_nH, djRGB(255, 255, 255));
 	}
 
 	for (size_t i = 0; i < pItem->GetNumChildren(); ++i)
@@ -234,20 +231,23 @@ void CdjDesktop::DrawWidgetDebugInfo(CdjItem *pItem, int nScreenX, int nScreenY)
 	}
 }
 
-void CdjDesktop::Draw(SDL_Surface *pSurface, int nX, int nY)
+void CdjDesktop::Draw(SDL_Renderer *pRenderer, int nX, int nY)
 {
-	djDrawFilledRect(pSurface, nX, nY, m_nW, m_nH, SDL_MapRGB(pSurface->format, 0, 0, 0));
+	djDrawFilledRect(pRenderer, nX, nY, m_nW, m_nH, djRGB(0, 0, 0));
 }
 
 void CdjDesktop::DrawAll()
 {
-	CdjItem::DrawAll(m_pSurface, 0, 0);
+	SDL_SetRenderDrawColor(m_pRenderer, 0, 0, 0, 255);
+	SDL_RenderClear(m_pRenderer);
+
+	CdjItem::DrawAll(m_pRenderer, 0, 0);
 
 	if (m_bShowDebugInfo)
 	{
 		char sbuf[1024];
 		snprintf(sbuf, sizeof(sbuf), "%.2f", m_fFPS);
-		m_pFont->DrawText(m_pSurface, 2, 2, sbuf);
+		m_pFont->DrawText(m_pRenderer, 2, 2, sbuf);
 		DrawWidgetDebugInfo(this);
 	}
 }

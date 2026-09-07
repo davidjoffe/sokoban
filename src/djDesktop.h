@@ -23,14 +23,13 @@ public:
 
 	bool Initialize() override;
 	bool Destroy() override;
-	bool OnEvent(SDL_Event &Event, SDLMod ModState) override;
+	bool OnEvent(SDL_Event &Event, SDL_Keymod ModState) override;
 
 	bool Update(float dt) override;
 	bool UpdateAfter(float dt) override;
-	void Draw(SDL_Surface *pSurface, int nX, int nY) override;
+	void Draw(SDL_Renderer *pRenderer, int nX, int nY) override;
 
-	int InitSurface();
-	bool LoadMouseCursor(const char *szFilename);
+	int InitWindowAndRenderer();
 	bool LoadMouseCursorA(const char *szFilename, const char *szAlphaFilename);
 	void ShowCursor() noexcept { m_bShowCursor = true; }
 	void HideCursor() noexcept { m_bShowCursor = false; }
@@ -55,16 +54,18 @@ public:
 		m_nMouseY = nY;
 	}
 
-	SDL_Surface *m_pCursor{nullptr};
+	SDL_Texture *m_pCursor{nullptr};
 	CdjFont *m_pFont{nullptr};
 	CdjFont *m_pFont8x13{nullptr};
 	CdjFont *m_pFont8x13B{nullptr};
 
 	void DrawAll();
-	SDL_Surface *GetSurface() const noexcept { return m_pSurface; }
+	SDL_Renderer *GetRenderer() const noexcept { return m_pRenderer; }
+	SDL_Window *GetWindow() const noexcept { return m_pWindow; }
 
 protected:
-	SDL_Surface *m_pSurface{nullptr};
+	SDL_Window *m_pWindow{nullptr};
+	SDL_Renderer *m_pRenderer{nullptr};
 
 	void SetFullScreen(bool bFullScreen);
 	bool m_bShowDebugInfo{false};

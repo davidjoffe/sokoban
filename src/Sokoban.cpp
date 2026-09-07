@@ -5,7 +5,6 @@
 // https://grayskygames.com/
 //---------------------------------------------------------------------------
 
-#include "SDL.h"
 #include "Sokoban.h"
 #include "djControls.h"
 #include "djDesktop.h"
@@ -16,11 +15,6 @@
 
 using namespace nsSokoban;
 
-//___________________________________________________________________________
-//
-// CChooseLevels
-//___________________________________________________________________________
-
 class nsSokoban::CChooseLevels : public CdjItem
 {
 public:
@@ -29,9 +23,9 @@ public:
 
 	bool Initialize() override;
 	bool Destroy() override;
-	bool OnEvent(SDL_Event &Event, SDLMod ModState) override;
+	bool OnEvent(SDL_Event &Event, SDL_Keymod ModState) override;
 	bool Update(float dt) override;
-	void Draw(SDL_Surface *pSurface, int nX, int nY) override;
+	void Draw(SDL_Renderer *pRenderer, int nX, int nY) override;
 
 	bool m_bClose{false};
 	int m_nChosen{-1};
@@ -88,15 +82,8 @@ bool CChooseLevels::Initialize()
 	return true;
 }
 
-bool CChooseLevels::Destroy()
-{
-	return CdjItem::Destroy();
-}
-
-bool CChooseLevels::OnEvent(SDL_Event &Event, SDLMod ModState)
-{
-	return CdjItem::OnEvent(Event, ModState);
-}
+bool CChooseLevels::Destroy() { return CdjItem::Destroy(); }
+bool CChooseLevels::OnEvent(SDL_Event &Event, SDL_Keymod ModState) { return CdjItem::OnEvent(Event, ModState); }
 
 bool CChooseLevels::Update(float dt)
 {
@@ -113,10 +100,10 @@ bool CChooseLevels::Update(float dt)
 	return CdjItem::Update(dt);
 }
 
-void CChooseLevels::Draw(SDL_Surface *pSurface, int nX, int nY)
+void CChooseLevels::Draw(SDL_Renderer *pRenderer, int nX, int nY)
 {
-	djDrawGradientVert(pSurface, nX, nY, m_nW, m_nH, 50, 50, 50, 140, 140, 140, 5);
-	djDrawRect(pSurface, nX, nY, m_nW, m_nH, SDL_MapRGB(pSurface->format, 250, 250, 250));
+	djDrawGradientVert(pRenderer, nX, nY, m_nW, m_nH, 50, 50, 50, 140, 140, 140, 5);
+	djDrawRect(pRenderer, nX, nY, m_nW, m_nH, djRGB(250, 250, 250));
 
 	CdjFont *pFontH = g_pScreen->m_pFont8x13B;
 	CdjFont *pFontT = g_pScreen->m_pFont8x13;
@@ -132,19 +119,19 @@ void CChooseLevels::Draw(SDL_Surface *pSurface, int nX, int nY)
 		{
 			sName += " (" + LS.sDate + ")";
 		}
-		pFontH->DrawText(pSurface, nTextX, nTextY, "Name:");             nTextY += pFontH->GetH();
-		pFontT->DrawText(pSurface, nTextX, nTextY, sName.c_str());       nTextY += pFontT->GetH();
-		pFontH->DrawText(pSurface, nTextX, nTextY, "Author:");           nTextY += pFontH->GetH();
-		pFontT->DrawText(pSurface, nTextX, nTextY, LS.sAuthor.c_str());  nTextY += pFontT->GetH();
-		pFontH->DrawText(pSurface, nTextX, nTextY, "URL:");              nTextY += pFontH->GetH();
-		pFontT->DrawText(pSurface, nTextX, nTextY, LS.sURL.c_str());     nTextY += pFontT->GetH();
-		pFontH->DrawText(pSurface, nTextX, nTextY, "E-Mail:");           nTextY += pFontH->GetH();
-		pFontT->DrawText(pSurface, nTextX, nTextY, LS.sEmail.c_str());   nTextY += pFontT->GetH();
-		pFontH->DrawText(pSurface, nTextX, nTextY, "Difficulty:");       nTextY += pFontH->GetH();
-		pFontT->DrawText(pSurface, nTextX, nTextY, LS.sDifficulty.c_str()); nTextY += pFontT->GetH();
+		pFontH->DrawText(pRenderer, nTextX, nTextY, "Name:");             nTextY += pFontH->GetH();
+		pFontT->DrawText(pRenderer, nTextX, nTextY, sName.c_str());       nTextY += pFontT->GetH();
+		pFontH->DrawText(pRenderer, nTextX, nTextY, "Author:");           nTextY += pFontH->GetH();
+		pFontT->DrawText(pRenderer, nTextX, nTextY, LS.sAuthor.c_str());  nTextY += pFontT->GetH();
+		pFontH->DrawText(pRenderer, nTextX, nTextY, "URL:");              nTextY += pFontH->GetH();
+		pFontT->DrawText(pRenderer, nTextX, nTextY, LS.sURL.c_str());     nTextY += pFontT->GetH();
+		pFontH->DrawText(pRenderer, nTextX, nTextY, "E-Mail:");           nTextY += pFontH->GetH();
+		pFontT->DrawText(pRenderer, nTextX, nTextY, LS.sEmail.c_str());   nTextY += pFontT->GetH();
+		pFontH->DrawText(pRenderer, nTextX, nTextY, "Difficulty:");       nTextY += pFontH->GetH();
+		pFontT->DrawText(pRenderer, nTextX, nTextY, LS.sDifficulty.c_str()); nTextY += pFontT->GetH();
 	}
 
-	CdjItem::Draw(pSurface, nX, nY);
+	CdjItem::Draw(pRenderer, nX, nY);
 }
 
 //___________________________________________________________________________
@@ -193,8 +180,8 @@ CSokoban::~CSokoban()
 {
 	delete m_pLevelManager;
 	delete m_pCurSet;
-	if (m_pSokobanHeader) SDL_FreeSurface(m_pSokobanHeader);
-	if (m_pAbout) SDL_FreeSurface(m_pAbout);
+	if (m_pSokobanHeader) SDL_DestroyTexture(m_pSokobanHeader);
+	if (m_pAbout) SDL_DestroyTexture(m_pAbout);
 	ClearTileSets();
 }
 
@@ -234,8 +221,6 @@ void CSokoban::FindTarget(int nX, int nY, int nPathLen)
 
 bool CSokoban::Initialize()
 {
-	SDL_EnableKeyRepeat(250, SDL_DEFAULT_REPEAT_INTERVAL - 5);
-
 	LoadTileSets("default");
 	if (m_apTileSets.empty())
 		return false;
@@ -243,8 +228,12 @@ bool CSokoban::Initialize()
 	SDL_Surface *pSurface = SDL_LoadBMP((GetDataPath() + "sokoban/themes/default/sokoban.bmp").c_str());
 	if (pSurface)
 	{
-		m_pSokobanHeader = SDL_DisplayFormat(pSurface);
-		SDL_FreeSurface(pSurface);
+		m_pSokobanHeader = SDL_CreateTextureFromSurface(g_pScreen->GetRenderer(), pSurface);
+		SDL_DestroySurface(pSurface);
+		if (m_pSokobanHeader)
+		{
+			SDL_SetTextureScaleMode(m_pSokobanHeader, SDL_SCALEMODE_NEAREST);
+		}
 	}
 
 	m_pLevelManager = new CLevelManager;
@@ -270,7 +259,7 @@ bool CSokoban::Destroy()
 
 	if (m_pSokobanHeader)
 	{
-		SDL_FreeSurface(m_pSokobanHeader);
+		SDL_DestroyTexture(m_pSokobanHeader);
 		m_pSokobanHeader = nullptr;
 	}
 	ClearTileSets();
@@ -520,31 +509,31 @@ bool CSokoban::Update(float dt)
 	return true;
 }
 
-void CSokoban::Draw(SDL_Surface *pSurface, int nX, int nY)
+void CSokoban::Draw(SDL_Renderer *pRenderer, int nX, int nY)
 {
 	CdjFont *pFont = g_pScreen->m_pFont8x13B;
 
 	if (m_bShowingAbout)
 	{
 		if (m_pAbout)
-			djBlit(pSurface, m_pAbout, m_nW / 2 - 320 / 2, m_nH / 2 - 240 / 2);
+			djBlit(pRenderer, m_pAbout, m_nW / 2 - 320 / 2, m_nH / 2 - 240 / 2);
 		return;
 	}
 
 	if (!HaveLevel())
-		pFont->DrawText(pSurface, nX + 20, nY + 20, "NO LEVEL");
+		pFont->DrawText(pRenderer, nX + 20, nY + 20, "NO LEVEL");
 
 	if (!m_pTileSet)
 	{
 		nY += pFont->GetH();
-		pFont->DrawText(pSurface, nX + 20, nY + 20, "NO TILESET");
+		pFont->DrawText(pRenderer, nX + 20, nY + 20, "NO TILESET");
 		return;
 	}
 
 	if (HaveLevel())
 	{
 		int nSpriteSize = m_pTileSet->nW;
-		SDL_Surface *pSprites = m_pTileSet->pSprites;
+		SDL_Texture *pSprites = m_pTileSet->pSprites;
 
 		int iOffsetX = ((m_nW - RIGHTBAR) / 2) - ((m_nLevelW * nSpriteSize) / 2);
 		int iOffsetY = (m_nH / 2) - ((m_nLevelH * nSpriteSize) / 2);
@@ -553,20 +542,20 @@ void CSokoban::Draw(SDL_Surface *pSurface, int nX, int nY)
 
 		int nBorderWidth = nSpriteSize / 2;
 
-		djDrawSprite(0, pSurface, m_pTileSet->pBorders, nX + iOffsetX - nBorderWidth, nY + iOffsetY - nBorderWidth, nBorderWidth, nBorderWidth);
-		djDrawSprite(1, pSurface, m_pTileSet->pBorders, nX + iOffsetX + m_nLevelW * nSpriteSize, nY + iOffsetY - nBorderWidth, nBorderWidth, nBorderWidth);
-		djDrawSprite(5, pSurface, m_pTileSet->pBorders, nX + iOffsetX + m_nLevelW * nSpriteSize, nY + iOffsetY + m_nLevelH * nSpriteSize, nBorderWidth, nBorderWidth);
-		djDrawSprite(4, pSurface, m_pTileSet->pBorders, nX + iOffsetX - nBorderWidth, nY + iOffsetY + m_nLevelH * nSpriteSize, nBorderWidth, nBorderWidth);
+		djDrawSprite(0, pRenderer, m_pTileSet->pBorders, nX + iOffsetX - nBorderWidth, nY + iOffsetY - nBorderWidth, nBorderWidth, nBorderWidth);
+		djDrawSprite(1, pRenderer, m_pTileSet->pBorders, nX + iOffsetX + m_nLevelW * nSpriteSize, nY + iOffsetY - nBorderWidth, nBorderWidth, nBorderWidth);
+		djDrawSprite(5, pRenderer, m_pTileSet->pBorders, nX + iOffsetX + m_nLevelW * nSpriteSize, nY + iOffsetY + m_nLevelH * nSpriteSize, nBorderWidth, nBorderWidth);
+		djDrawSprite(4, pRenderer, m_pTileSet->pBorders, nX + iOffsetX - nBorderWidth, nY + iOffsetY + m_nLevelH * nSpriteSize, nBorderWidth, nBorderWidth);
 
 		for (int i = 0; i < m_nLevelW; ++i)
 		{
-			djDrawSprite(1, pSurface, m_pTileSet->pBorders, nX + iOffsetX + i * nSpriteSize, nY + iOffsetY - nBorderWidth, nSpriteSize, nBorderWidth);
-			djDrawSprite(3, pSurface, m_pTileSet->pBorders, nX + iOffsetX + i * nSpriteSize, nY + iOffsetY + m_nLevelH * nSpriteSize, nSpriteSize, nBorderWidth);
+			djDrawSprite(1, pRenderer, m_pTileSet->pBorders, nX + iOffsetX + i * nSpriteSize, nY + iOffsetY - nBorderWidth, nSpriteSize, nBorderWidth);
+			djDrawSprite(3, pRenderer, m_pTileSet->pBorders, nX + iOffsetX + i * nSpriteSize, nY + iOffsetY + m_nLevelH * nSpriteSize, nSpriteSize, nBorderWidth);
 		}
 		for (int i = 0; i < m_nLevelH; ++i)
 		{
-			djDrawSprite(4, pSurface, m_pTileSet->pBorders, nX + iOffsetX - nBorderWidth, nY + iOffsetY + i * nSpriteSize, nBorderWidth, nSpriteSize);
-			djDrawSprite(5, pSurface, m_pTileSet->pBorders, nX + iOffsetX + m_nLevelW * nSpriteSize, nY + iOffsetY + i * nSpriteSize, nBorderWidth, nSpriteSize);
+			djDrawSprite(4, pRenderer, m_pTileSet->pBorders, nX + iOffsetX - nBorderWidth, nY + iOffsetY + i * nSpriteSize, nBorderWidth, nSpriteSize);
+			djDrawSprite(5, pRenderer, m_pTileSet->pBorders, nX + iOffsetX + m_nLevelW * nSpriteSize, nY + iOffsetY + i * nSpriteSize, nBorderWidth, nSpriteSize);
 		}
 
 		int nOffsetY = iOffsetY + nY;
@@ -589,13 +578,13 @@ void CSokoban::Draw(SDL_Surface *pSurface, int nX, int nY)
 				switch (cLevChar)
 				{
 				case sokBLANK:
-					djDrawSprite(sokBLANK + nShadowBits, pSurface, pSprites, nCurrX, nOffsetY, nSpriteSize, nSpriteSize);
+					djDrawSprite(sokBLANK + nShadowBits, pRenderer, pSprites, nCurrX, nOffsetY, nSpriteSize, nSpriteSize);
 					break;
 				case sokCRATEDEST:
-					djDrawSprite(sokCRATEDEST + nShadowBits, pSurface, pSprites, nCurrX, nOffsetY, nSpriteSize, nSpriteSize);
+					djDrawSprite(sokCRATEDEST + nShadowBits, pRenderer, pSprites, nCurrX, nOffsetY, nSpriteSize, nSpriteSize);
 					break;
 				default:
-					djDrawSprite(cLevChar, pSurface, pSprites, nCurrX, nOffsetY, nSpriteSize, nSpriteSize);
+					djDrawSprite(cLevChar, pRenderer, pSprites, nCurrX, nOffsetY, nSpriteSize, nSpriteSize);
 				}
 				nCurrX += nSpriteSize;
 			}
@@ -608,7 +597,7 @@ void CSokoban::Draw(SDL_Surface *pSurface, int nX, int nY)
 		{
 			if (m_nCrateX != -1 && m_nCrateY != -1)
 			{
-				djDrawRect(pSurface, nX + iOffsetX + m_nCrateX * nSpriteSize, nY + iOffsetY + m_nCrateY * nSpriteSize, nSpriteSize, nSpriteSize, SDL_MapRGB(pSurface->format, 120, 120, 255));
+				djDrawRect(pRenderer, nX + iOffsetX + m_nCrateX * nSpriteSize, nY + iOffsetY + m_nCrateY * nSpriteSize, nSpriteSize, nSpriteSize, djRGB(120, 120, 255));
 			}
 			else
 			{
@@ -619,7 +608,7 @@ void CSokoban::Draw(SDL_Surface *pSurface, int nX, int nY)
 					if ((m_nHeroX == nBlockX && djABS(nBlockY - m_nHeroY) == 1) ||
 						(m_nHeroY == nBlockY && djABS(nBlockX - m_nHeroX) == 1))
 					{
-						djDrawRect(pSurface, nX + iOffsetX + nBlockX * nSpriteSize, nY + iOffsetY + nBlockY * nSpriteSize, nSpriteSize, nSpriteSize, SDL_MapRGB(pSurface->format, 70, 70, 200));
+						djDrawRect(pRenderer, nX + iOffsetX + nBlockX * nSpriteSize, nY + iOffsetY + nBlockY * nSpriteSize, nSpriteSize, nSpriteSize, djRGB(70, 70, 200));
 					}
 				}
 			}
@@ -641,74 +630,70 @@ void CSokoban::Draw(SDL_Surface *pSurface, int nX, int nY)
 						nPathY += m_aAutoPath[i].dy;
 						int x2 = nX + iOffsetX + nPathX * nSpriteSize + nSpriteSize / 2;
 						int y2 = nY + iOffsetY + nPathY * nSpriteSize + nSpriteSize / 2;
-						djDrawRect(pSurface,
+						djDrawRect(pRenderer,
 							djMIN(x1, x2),
 							djMIN(y1, y2),
 							m_aAutoPath[i].dx != 0 ? nSpriteSize + 1 : 2,
 							m_aAutoPath[i].dy != 0 ? nSpriteSize + 1 : 2,
-							SDL_MapRGB(pSurface->format, djMIN(255, static_cast<int>(100 + i * 25)), 255, djMIN(255, static_cast<int>(60 + i * 10))));
+							djRGB(static_cast<Uint8>(djMIN(255, static_cast<int>(100 + i * 25))), 255, static_cast<Uint8>(djMIN(255, static_cast<int>(60 + i * 10)))));
 					}
 				}
 			}
 			else
 			{
-				djDrawRect(pSurface, nX + iOffsetX + m_nTargetX * nSpriteSize, nY + iOffsetY + m_nTargetY * nSpriteSize, nSpriteSize, nSpriteSize, SDL_MapRGB(pSurface->format, 80, 255, 80));
+				djDrawRect(pRenderer, nX + iOffsetX + m_nTargetX * nSpriteSize, nY + iOffsetY + m_nTargetY * nSpriteSize, nSpriteSize, nSpriteSize, djRGB(80, 255, 80));
 			}
 		}
 
 		int heroSprite = m_bWon ? 40 : (m_fPushedTimer > 0.0f ? 40 : 32) + m_nHeroDirection;
-		djDrawSprite(heroSprite, pSurface, pSprites, nX + iOffsetX + m_nHeroX * nSpriteSize, nY + iOffsetY + m_nHeroY * nSpriteSize, nSpriteSize, nSpriteSize);
+		djDrawSprite(heroSprite, pRenderer, pSprites, nX + iOffsetX + m_nHeroX * nSpriteSize, nY + iOffsetY + m_nHeroY * nSpriteSize, nSpriteSize, nSpriteSize);
 	}
 
 	//
 	// RIGHT BAR
 	//
 
-	// Sokoban header in top right
 	if (m_pSokobanHeader)
 	{
 		int headerX = nX + m_nW - RIGHTBAR;
 		int headerY = nY;
-		djBlit(pSurface, m_pSokobanHeader, headerX, headerY);
+		djBlit(pRenderer, m_pSokobanHeader, headerX, headerY);
 
-		// Renderiza a versão dinamicamente a partir do registro de jogos
 		std::string sVer = "version " + g_GameRegistry.GetGameDescriptor(0).sVersion;
 		CdjFont *pVerFont = g_pScreen->m_pFont8x13;
 		if (pVerFont)
 		{
-			// Centralizado logo abaixo do logotipo "Sokoban"
 			int verX = headerX + (RIGHTBAR - pVerFont->GetStringWidth(sVer.c_str())) / 2;
-			pVerFont->DrawText(pSurface, verX, headerY + 48, sVer.c_str());
+			pVerFont->DrawText(pRenderer, verX, headerY + 48, sVer.c_str());
 		}
 	}
 
-	// Gray 'divider' separating game area and stuff on right
-	djDrawFilledRect(pSurface, nX + m_nW - RIGHTBAR, nY, 1, m_nH, SDL_MapRGB(pSurface->format, 60, 60, 60));
+	djDrawFilledRect(pRenderer, nX + m_nW - RIGHTBAR, nY, 1, m_nH, djRGB(60, 60, 60));
 
 	int nDY = pFont->GetH();
 	int nHelpY = nY + m_nH - 11 * nDY * 2;
 	int nHelpX = nX + m_nW - RIGHTBAR + 8;
-	pFont->DrawText(pSurface, nHelpX, nHelpY, "Alt+Enter:");        nHelpY += nDY;
-	pFont->DrawText(pSurface, nHelpX, nHelpY, "Fullscreen Mode");    nHelpY += nDY * 2;
-	pFont->DrawText(pSurface, nHelpX, nHelpY, "C: Choose Levels");   nHelpY += nDY * 2;
-	pFont->DrawText(pSurface, nHelpX, nHelpY, "M: Next Level");      nHelpY += nDY * 2;
-	pFont->DrawText(pSurface, nHelpX, nHelpY, "N: Prev Level");      nHelpY += nDY * 2;
-	pFont->DrawText(pSurface, nHelpX, nHelpY, "R: Reset");           nHelpY += nDY * 2;
-	pFont->DrawText(pSurface, nHelpX, nHelpY, "U: Undo");            nHelpY += nDY * 2;
-	pFont->DrawText(pSurface, nHelpX, nHelpY, "S: Shadows");         nHelpY += nDY * 2;
-	pFont->DrawText(pSurface, nHelpX, nHelpY, "A: About");           nHelpY += nDY * 2;
-	pFont->DrawText(pSurface, nHelpX, nHelpY, "ESC: Exit");          nHelpY += nDY * 2;
+	pFont->DrawText(pRenderer, nHelpX, nHelpY, "Alt+Enter:");        nHelpY += nDY;
+	pFont->DrawText(pRenderer, nHelpX, nHelpY, "Fullscreen Mode");    nHelpY += nDY * 2;
+	pFont->DrawText(pRenderer, nHelpX, nHelpY, "C: Choose Levels");   nHelpY += nDY * 2;
+	pFont->DrawText(pRenderer, nHelpX, nHelpY, "M: Next Level");      nHelpY += nDY * 2;
+	pFont->DrawText(pRenderer, nHelpX, nHelpY, "N: Prev Level");      nHelpY += nDY * 2;
+	pFont->DrawText(pRenderer, nHelpX, nHelpY, "R: Reset");           nHelpY += nDY * 2;
+	pFont->DrawText(pRenderer, nHelpX, nHelpY, "U: Undo");            nHelpY += nDY * 2;
+	pFont->DrawText(pRenderer, nHelpX, nHelpY, "S: Shadows");         nHelpY += nDY * 2;
+	pFont->DrawText(pRenderer, nHelpX, nHelpY, "A: About");           nHelpY += nDY * 2;
+	pFont->DrawText(pRenderer, nHelpX, nHelpY, "ESC: Exit");          nHelpY += nDY * 2;
 
 	int nStatusBarHeight = nDY + 10;
-	djDrawFilledRect(pSurface, nX, nY + m_nH - nStatusBarHeight,     m_nW, 1, SDL_MapRGB(pSurface->format, 182, 182, 182));
-	djDrawFilledRect(pSurface, nX, nY + m_nH - nStatusBarHeight + 1, m_nW, 1, SDL_MapRGB(pSurface->format, 142, 142, 142));
-	djDrawFilledRect(pSurface, nX, nY + m_nH - nStatusBarHeight + 2, m_nW, nStatusBarHeight - 2, SDL_MapRGB(pSurface->format, 110, 110, 110));
+	djDrawFilledRect(pRenderer, nX, nY + m_nH - nStatusBarHeight,     m_nW, 1, djRGB(182, 182, 182));
+	djDrawFilledRect(pRenderer, nX, nY + m_nH - nStatusBarHeight + 1, m_nW, 1, djRGB(142, 142, 142));
+	djDrawFilledRect(pRenderer, nX, nY + m_nH - nStatusBarHeight + 2, m_nW, nStatusBarHeight - 2, djRGB(110, 110, 110));
 
 	if (m_pCurSet && m_iCurLev >= 0)
 	{
 		std::string sInfo = "Level: " + std::to_string(m_iCurLev + 1) + "/" + std::to_string(GetNumLevels())
 			+ " Moves: " + std::to_string(m_iNumMoves) + " Pushes: " + std::to_string(m_iNumPushes);
-		pFont->DrawText(pSurface, nX + m_nW - pFont->GetStringWidth(sInfo.c_str()) - 8, nY + m_nH - nDY - 4, sInfo.c_str());
+		pFont->DrawText(pRenderer, nX + m_nW - pFont->GetStringWidth(sInfo.c_str()) - 8, nY + m_nH - nDY - 4, sInfo.c_str());
 	}
 
 	std::string sTitle = "[" + m_LevelSet.sName;
@@ -720,12 +705,12 @@ void CSokoban::Draw(SDL_Surface *pSurface, int nX, int nY)
 	{
 		sTitle += "Completed (" + std::to_string(m_nMovesTaken) + " move" + (m_nMovesTaken == 1 ? "" : "s") + ")";
 	}
-	pFont->DrawText(pSurface, nX + 8, nY + m_nH - nDY - 4, sTitle.c_str());
+	pFont->DrawText(pRenderer, nX + 8, nY + m_nH - nDY - 4, sTitle.c_str());
 
 	if (m_bWon && !m_bGotMouseClick)
 	{
 		const char *msg = "SPACE or mouse click to continue";
-		pFont->DrawText(pSurface, nX + (m_nW - RIGHTBAR) / 2 - pFont->GetStringWidth(msg) / 2, nY + m_nH - 24 - pFont->GetH(), msg);
+		pFont->DrawText(pRenderer, nX + (m_nW - RIGHTBAR) / 2 - pFont->GetStringWidth(msg) / 2, nY + m_nH - 24 - pFont->GetH(), msg);
 	}
 }
 
@@ -936,7 +921,7 @@ void CSokoban::SetShowingAbout(bool b)
 	if (!b)
 	{
 		m_bShowingAbout = false;
-		if (m_pAbout) SDL_FreeSurface(m_pAbout);
+		if (m_pAbout) SDL_DestroyTexture(m_pAbout);
 		m_pAbout = nullptr;
 	}
 	else
@@ -944,9 +929,13 @@ void CSokoban::SetShowingAbout(bool b)
 		SDL_Surface *pSurface = SDL_LoadBMP((GetDataPath() + "sokoban/about.bmp").c_str());
 		if (pSurface)
 		{
-			m_pAbout = SDL_DisplayFormat(pSurface);
-			SDL_FreeSurface(pSurface);
-			m_bShowingAbout = true;
+			m_pAbout = SDL_CreateTextureFromSurface(g_pScreen->GetRenderer(), pSurface);
+			SDL_DestroySurface(pSurface);
+			if (m_pAbout)
+			{
+				SDL_SetTextureScaleMode(m_pAbout, SDL_SCALEMODE_NEAREST);
+				m_bShowingAbout = true;
+			}
 		}
 	}
 }
@@ -1069,9 +1058,9 @@ void CSokoban::CloseChooseLevels()
 	}
 }
 
-bool CSokoban::OnEvent(SDL_Event &Event, SDLMod /*ModState*/)
+bool CSokoban::OnEvent(SDL_Event &Event, SDL_Keymod)
 {
-	if (Event.type == SDL_QUIT)
+	if (Event.type == SDL_EVENT_QUIT)
 	{
 		if (!m_pCloseConfirm && !m_pChooseLevels && !m_bShowingAbout)
 		{
@@ -1080,7 +1069,7 @@ bool CSokoban::OnEvent(SDL_Event &Event, SDLMod /*ModState*/)
 		}
 	}
 
-	if (Event.type == SDL_KEYDOWN && Event.key.type == SDL_KEYDOWN)
+	if (Event.type == SDL_EVENT_KEY_DOWN)
 	{
 		if (m_pCloseConfirm)
 		{
@@ -1088,7 +1077,7 @@ bool CSokoban::OnEvent(SDL_Event &Event, SDLMod /*ModState*/)
 		}
 		if (m_pChooseLevels)
 		{
-			if (Event.key.keysym.sym == SDLK_ESCAPE)
+			if (Event.key.key == SDLK_ESCAPE)
 			{
 				CloseChooseLevels();
 				return true;
@@ -1097,7 +1086,7 @@ bool CSokoban::OnEvent(SDL_Event &Event, SDLMod /*ModState*/)
 		}
 		if (m_bShowingAbout)
 		{
-			if (Event.key.keysym.sym == SDLK_a || Event.key.keysym.sym == SDLK_ESCAPE || Event.key.keysym.sym == SDLK_SPACE)
+			if (Event.key.key == SDLK_A || Event.key.key == SDLK_ESCAPE || Event.key.key == SDLK_SPACE)
 			{
 				SetShowingAbout(false);
 				return true;
@@ -1105,7 +1094,7 @@ bool CSokoban::OnEvent(SDL_Event &Event, SDLMod /*ModState*/)
 			return false;
 		}
 
-		switch (Event.key.keysym.sym)
+		switch (Event.key.key)
 		{
 		case SDLK_UP:    if (!m_bBusyFollowingAutoPath) TryMove(0, -1); return true;
 		case SDLK_DOWN:  if (!m_bBusyFollowingAutoPath) TryMove(0, 1);  return true;
@@ -1113,7 +1102,7 @@ bool CSokoban::OnEvent(SDL_Event &Event, SDLMod /*ModState*/)
 		case SDLK_RIGHT: if (!m_bBusyFollowingAutoPath) TryMove(1, 0);  return true;
 		case SDLK_ESCAPE: ShowCloseConfirm(); return true;
 
-		case SDLK_c:
+		case SDLK_C:
 			{
 				m_pChooseLevels = new CChooseLevels(m_pLevelManager, m_pLevelManager->FindLevelSetDescriptorIndex(m_sCurSet.c_str()));
 				int nW = (m_nW - RIGHTBAR) - 20;
@@ -1124,18 +1113,18 @@ bool CSokoban::OnEvent(SDL_Event &Event, SDLMod /*ModState*/)
 			}
 			return true;
 
-		case SDLK_m: if (HaveLevel() && m_iCurLev < GetNumLevels() - 1) { m_bWon = true; m_bGotMouseClick = true; } return true;
-		case SDLK_n: if (HaveLevel() && m_iCurLev > 0) SetLevel(m_iCurLev - 1); return true;
-		case SDLK_r: if (HaveLevel()) SetLevel(m_iCurLev); return true;
-		case SDLK_u: if (HaveLevel()) UndoMove(); return true;
-		case SDLK_s:
+		case SDLK_M: if (HaveLevel() && m_iCurLev < GetNumLevels() - 1) { m_bWon = true; m_bGotMouseClick = true; } return true;
+		case SDLK_N: if (HaveLevel() && m_iCurLev > 0) SetLevel(m_iCurLev - 1); return true;
+		case SDLK_R: if (HaveLevel()) SetLevel(m_iCurLev); return true;
+		case SDLK_U: if (HaveLevel()) UndoMove(); return true;
+		case SDLK_S:
 			if (HaveLevel())
 			{
 				m_bShadows = !m_bShadows;
 				g_Settings.SetSettingBool(SETTING_SHADOWS, m_bShadows);
 			}
 			return true;
-		case SDLK_a:
+		case SDLK_A:
 			SetShowingAbout(true);
 			return true;
 		case SDLK_SPACE:
@@ -1255,7 +1244,7 @@ void CSokoban::LoadTileSets(const char *szDirectory)
 	for (int i = 1; i < 128; ++i)
 	{
 		auto *pTileSet = new STileSet;
-		if (pTileSet->Load(szDirectory, i))
+		if (pTileSet->Load(g_pScreen->GetRenderer(), szDirectory, i))
 		{
 			m_apTileSets.push_back(pTileSet);
 		}
@@ -1278,8 +1267,8 @@ void CSokoban::ClearTileSets()
 
 void CSokoban::STileSet::Destroy()
 {
-	if (pSprites) SDL_FreeSurface(pSprites);
-	if (pBorders) SDL_FreeSurface(pBorders);
+	if (pSprites) SDL_DestroyTexture(pSprites);
+	if (pBorders) SDL_DestroyTexture(pBorders);
 	pSprites = nullptr;
 	pBorders = nullptr;
 	nW = 0;
@@ -1306,7 +1295,7 @@ void CSokoban::ChooseTileSet()
 		m_pTileSet = m_apTileSets[0];
 }
 
-bool CSokoban::STileSet::Load(const char *szDirectory, int nSize)
+bool CSokoban::STileSet::Load(SDL_Renderer *pRenderer, const char *szDirectory, int nSize)
 {
 	std::string sBase = GetDataPath() + "sokoban/themes/" + szDirectory + "/";
 	nW = nSize;
@@ -1320,9 +1309,13 @@ bool CSokoban::STileSet::Load(const char *szDirectory, int nSize)
 		return false;
 	}
 
-	SDL_SetColorKey(pSurface, SDL_SRCCOLORKEY | SDL_RLEACCEL, SDL_MapRGB(pSurface->format, 0, 255, 0));
-	pSprites = SDL_DisplayFormat(pSurface);
-	SDL_FreeSurface(pSurface);
+	SDL_SetSurfaceColorKey(pSurface, true, SDL_MapSurfaceRGB(pSurface, 0, 255, 0));
+	pSprites = SDL_CreateTextureFromSurface(pRenderer, pSurface);
+	SDL_DestroySurface(pSurface);
+	if (pSprites)
+	{
+		SDL_SetTextureScaleMode(pSprites, SDL_SCALEMODE_NEAREST);
+	}
 
 	std::string sBorders = sBase + "borders" + std::to_string(nSize) + ".bmp";
 	pSurface = SDL_LoadBMP(sBorders.c_str());
@@ -1331,10 +1324,14 @@ bool CSokoban::STileSet::Load(const char *szDirectory, int nSize)
 		Destroy();
 		return false;
 	}
-	pBorders = SDL_DisplayFormat(pSurface);
-	SDL_FreeSurface(pSurface);
+	pBorders = SDL_CreateTextureFromSurface(pRenderer, pSurface);
+	SDL_DestroySurface(pSurface);
+	if (pBorders)
+	{
+		SDL_SetTextureScaleMode(pBorders, SDL_SCALEMODE_NEAREST);
+	}
 
-	return true;
+	return (pSprites != nullptr && pBorders != nullptr);
 }
 
 CLevelSet::~CLevelSet()

@@ -68,9 +68,9 @@ int main(int, char**)
 #endif
 	g_sConfigFile = s;
 
-	if (SDL_Init(SDL_INIT_VIDEO) < 0)
+	if (!SDL_Init(SDL_INIT_VIDEO))
 	{
-		std::cerr << "SDL Initialization failed: " << SDL_GetError() << '\n';
+		std::cerr << "SDL3 Initialization failed: " << SDL_GetError() << '\n';
 		return -1;
 	}
 
@@ -97,7 +97,7 @@ int main(int, char**)
 			return -1;
 		}
 
-		SDL_WM_SetCaption(GD.sWindowTitle.c_str(), nullptr);
+		SDL_SetWindowTitle(g_pScreen->GetWindow(), GD.sWindowTitle.c_str());
 		pGame->SetExtents(0, 0, g_pScreen->m_nW, g_pScreen->m_nH);
 
 		if (!pGame->Initialize())
@@ -141,9 +141,10 @@ int HeartBeat()
 		fTime = static_cast<float>(SDL_GetTicks()) / 1000.0f;
 
 		SDL_Event Event;
-		SDLMod ModState = SDL_GetModState();
+		SDL_Keymod ModState = SDL_GetModState();
 		while (SDL_PollEvent(&Event))
 		{
+			SDL_ConvertEventToRenderCoordinates(g_pScreen->GetRenderer(), &Event);
 			g_bMustRedraw.store(true, std::memory_order_relaxed);
 			g_pScreen->HandleEvent(Event, ModState);
 		}
@@ -157,13 +158,13 @@ int HeartBeat()
 			if (g_pScreen->m_bShowCursor && g_pScreen->m_pCursor)
 			{
 				djBlit(
-					g_pScreen->GetSurface(),
+					g_pScreen->GetRenderer(),
 					g_pScreen->m_pCursor,
 					g_pScreen->m_nMouseX - g_pScreen->m_nHotspotX,
 					g_pScreen->m_nMouseY - g_pScreen->m_nHotspotY);
 			}
 
-			SDL_Flip(g_pScreen->GetSurface());
+			SDL_RenderPresent(g_pScreen->GetRenderer());
 			g_bMustRedraw.store(false, std::memory_order_relaxed);
 		}
 		else

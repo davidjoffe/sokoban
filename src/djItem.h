@@ -8,7 +8,7 @@
 #ifndef _DJITEM_H_
 #define _DJITEM_H_
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #include "djGraph.h"
 #include "djUtils.h"
 #include <vector>
@@ -23,13 +23,13 @@ public:
 
 	virtual bool Initialize() { return true; }
 	virtual bool Destroy() { return true; }
-	virtual bool OnEvent(SDL_Event&, SDLMod) { return false; }
-	virtual bool HandleEvent(SDL_Event &Event, SDLMod ModState);
+	virtual bool OnEvent(SDL_Event&, SDL_Keymod) { return false; }
+	virtual bool HandleEvent(SDL_Event &Event, SDL_Keymod ModState);
 
 	virtual bool Update(float dt);
 	virtual bool UpdateAfter(float dt);
 
-	virtual void Draw(SDL_Surface*, int, int) {}
+	virtual void Draw(SDL_Renderer*, int, int) {}
 	virtual void OnMouseEnter(int, int) {}
 	virtual bool OnMouseMove(int, int, int, int) { return false; }
 	virtual void OnMouseLeave() {}
@@ -38,7 +38,7 @@ public:
 
 	bool UpdateAll(float dt);
 	void DestroyAll();
-	void DrawAll(SDL_Surface *pSurface, int nX, int nY);
+	void DrawAll(SDL_Renderer *pRenderer, int nX, int nY);
 
 	virtual void AddChild(CdjItem *pChild);
 	size_t GetNumChildren() const noexcept { return m_apChildren.size(); }
@@ -78,7 +78,7 @@ public:
 	~CdjWindow() override = default;
 
 	void AddChild(CdjItem *pChild) override;
-	void Draw(SDL_Surface *pSurface, int nX, int nY) override;
+	void Draw(SDL_Renderer *pRenderer, int nX, int nY) override;
 
 	void OnMouseEnter(int nX, int nY) override;
 	bool OnMouseMove(int nX, int nY, int nDX, int nDY) override;

@@ -1,16 +1,11 @@
 //---------------------------------------------------------------------------
 // djMenu.cpp
 //
-// Copyright (C) 2001-2024 David Joffe
+// Copyright (C) 2001-2026 David Joffe & Contributors
 // https://grayskygames.com/
 //---------------------------------------------------------------------------
 
 #include "djMenu.h"
 
-CdjMenu::CdjMenu()
-{
-}
-
-CdjMenu::~CdjMenu()
-{
-}
+CdjMenu::CdjMenu() = default;
+CdjMenu::~CdjMenu() = default;

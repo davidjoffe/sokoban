@@ -28,7 +28,7 @@ void CdjItem::AddChild(CdjItem *pChild)
 	}
 }
 
-bool CdjItem::HandleEvent(SDL_Event &Event, SDLMod ModState)
+bool CdjItem::HandleEvent(SDL_Event &Event, SDL_Keymod ModState)
 {
 	for (auto *child : m_apChildren)
 	{
@@ -58,12 +58,12 @@ bool CdjItem::UpdateAll(float dt)
 	return true;
 }
 
-void CdjItem::DrawAll(SDL_Surface *pSurface, int nX, int nY)
+void CdjItem::DrawAll(SDL_Renderer *pRenderer, int nX, int nY)
 {
-	Draw(pSurface, nX + m_nX, nY + m_nY);
+	Draw(pRenderer, nX + m_nX, nY + m_nY);
 	for (auto *child : m_apChildren)
 	{
-		child->DrawAll(pSurface, nX + m_nX, nY + m_nY);
+		child->DrawAll(pRenderer, nX + m_nX, nY + m_nY);
 	}
 }
 
@@ -178,14 +178,14 @@ void CdjWindow::AddChild(CdjItem *pChild)
 	pChild->SetExtents(BORDERWIDTH, TITLEBARHEIGHT + BORDERWIDTH, nW, nH);
 }
 
-void CdjWindow::Draw(SDL_Surface *pSurface, int nX, int nY)
+void CdjWindow::Draw(SDL_Renderer *pRenderer, int nX, int nY)
 {
-	djDrawRect(pSurface, nX, nY, m_nW, m_nH, SDL_MapRGB(pSurface->format, 200, 200, 200));
-	djDrawFilledRect(pSurface, nX + BORDERWIDTH, nY + BORDERWIDTH, m_nW - TWOBORDERWIDTH, TITLEBARHEIGHT, SDL_MapRGB(pSurface->format, 0, 0, 128));
+	djDrawRect(pRenderer, nX, nY, m_nW, m_nH, djRGB(200, 200, 200));
+	djDrawFilledRect(pRenderer, nX + BORDERWIDTH, nY + BORDERWIDTH, m_nW - TWOBORDERWIDTH, TITLEBARHEIGHT, djRGB(0, 0, 128));
 
 	if (!m_sName.empty() && g_pScreen && g_pScreen->m_pFont8x13B)
 	{
-		g_pScreen->m_pFont8x13B->DrawText(pSurface, nX + 16, nY + 6, m_sName.c_str());
+		g_pScreen->m_pFont8x13B->DrawText(pRenderer, nX + 16, nY + 6, m_sName.c_str());
 	}
 }
 

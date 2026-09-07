@@ -21,7 +21,7 @@ public:
 
 	void SetText(std::string_view sNormal, std::string_view sHighlighted = {}, std::string_view sSelected = {});
 
-	bool OnEvent(SDL_Event &Event, SDLMod ModState) override;
+	bool OnEvent(SDL_Event &Event, SDL_Keymod ModState) override;
 	void OnMouseEnter(int, int) override { m_nState = 1; }
 	void OnMouseLeave() override { m_nState = 0; }
 	bool OnMouseButtonDown(int) override { m_nState = 2; return true; }
@@ -31,7 +31,7 @@ public:
 		m_nState = 1;
 		return true;
 	}
-	void Draw(SDL_Surface *pSurface, int nX, int nY) override;
+	void Draw(SDL_Renderer *pRenderer, int nX, int nY) override;
 
 	bool WasPressed() noexcept
 	{
@@ -57,9 +57,9 @@ public:
 
 	void SetText(std::string_view sLabel, std::string_view sDefaultValue);
 
-	bool OnEvent(SDL_Event &Event, SDLMod ModState) override;
+	bool OnEvent(SDL_Event &Event, SDL_Keymod ModState) override;
 	bool Update(float dt) override;
-	void Draw(SDL_Surface *pSurface, int nX, int nY) override;
+	void Draw(SDL_Renderer *pRenderer, int nX, int nY) override;
 
 	bool IsConfirmed() const noexcept { return m_bConfirmed; }
 	const char *GetText() const noexcept { return m_sText.c_str(); }
@@ -81,14 +81,14 @@ public:
 	djList() = default;
 	~djList() override = default;
 
-	bool OnEvent(SDL_Event &Event, SDLMod ModState) override;
+	bool OnEvent(SDL_Event &Event, SDL_Keymod ModState) override;
 	void OnMouseEnter(int nX, int nY) override;
 	bool OnMouseMove(int nX, int nY, int nDX, int nDY) override;
 	void OnMouseLeave() override;
 	bool OnMouseButtonDown(int nButton) override;
 	bool OnMouseButtonUp(int nButton) override;
 	bool Update(float dt) override;
-	void Draw(SDL_Surface *pSurface, int nX, int nY) override;
+	void Draw(SDL_Renderer *pRenderer, int nX, int nY) override;
 
 	void AddItem(std::string_view sItem);
 	void SetItem(size_t nRow, size_t nColumn, std::string_view sItem);
@@ -131,8 +131,8 @@ public:
 
 	bool Initialize() override;
 	bool Update(float dt) override;
-	bool OnEvent(SDL_Event &Event, SDLMod ModState) override;
-	void Draw(SDL_Surface *pSurface, int nX, int nY) override;
+	bool OnEvent(SDL_Event &Event, SDL_Keymod ModState) override;
+	void Draw(SDL_Renderer *pRenderer, int nX, int nY) override;
 
 	bool m_bClose{false};
 	int m_nRet{0};

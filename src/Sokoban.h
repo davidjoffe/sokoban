@@ -92,9 +92,9 @@ public:
 
 	bool Initialize() override;
 	bool Destroy() override;
-	bool OnEvent(SDL_Event &Event, SDLMod ModState) override;
+	bool OnEvent(SDL_Event &Event, SDL_Keymod ModState) override;
 	bool Update(float dt) override;
-	void Draw(SDL_Surface *pSurface, int nX, int nY) override;
+	void Draw(SDL_Renderer *pRenderer, int nX, int nY) override;
 	bool OnMouseButtonDown(int nButton) override;
 	bool OnMouseMove(int nX, int nY, int nDX, int nDY) override;
 
@@ -138,10 +138,10 @@ protected:
 		STileSet() = default;
 		~STileSet() { Destroy(); }
 		void Destroy();
-		bool Load(const char *szDirectory, int nSize);
+		bool Load(SDL_Renderer *pRenderer, const char *szDirectory, int nSize);
 
-		SDL_Surface *pSprites{nullptr};
-		SDL_Surface *pBorders{nullptr};
+		SDL_Texture *pSprites{nullptr};
+		SDL_Texture *pBorders{nullptr};
 		int nW{0};
 		int nH{0};
 	};
@@ -153,8 +153,8 @@ protected:
 	void ClearTileSets();
 	void ChooseTileSet();
 
-	SDL_Surface *m_pSokobanHeader{nullptr};
-	SDL_Surface *m_pAbout{nullptr};
+	SDL_Texture *m_pSokobanHeader{nullptr};
+	SDL_Texture *m_pAbout{nullptr};
 	float m_fPushedTimer{0.0f};
 	bool m_bShowingAbout{false};
 
