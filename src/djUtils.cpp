@@ -13,14 +13,13 @@
 #ifdef WIN32
 #include <windows.h>
 #include <io.h> // _finddata_t
-#include "Shlobj.h"//SHCreateDirectoryEx
+#include "Shlobj.h" // SHCreateDirectoryEx
 #else
 #include <dirent.h>
-#include <sys/stat.h>
-#include <sys/types.h>//stat [for djFileExists]
+#include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <errno.h>//mkpath
+#include <errno.h>
 #endif
 
 char *djStrDup(const char *szSource)
@@ -150,15 +149,13 @@ void djFindFiles(const char *szDirectory, const char *szWildcard, std::vector<st
 	struct dirent* entry = (dirent *)NULL;
 	while ((entry = readdir(dir)))
 	{
-		if (entry->d_name)
+		if (entry->d_name[0] != '\0')
 		{
-//			// Check if the given entry is a directory
-//			if (stat(entry->d_name, &dir_stat) == -1)
-//				continue;
 			if (strstr(entry->d_name, szWildcard))
 				asFiles.push_back(entry->d_name);
 		}
 	}
+	closedir(dir);
 }
 
 bool djFileExists(const char *szFilename)
@@ -171,17 +168,6 @@ bool djFileExists(const char *szFilename)
 
 #endif
 
-/*
-bool djFileExists(const char *szFilename)
-{
-	std::vector<std::string> asFiles;
-	djFindFiles(NULL, szFilename, asFiles);
-	if (asFiles.size()>0)
-		return true;
-	return false;
-}
-*/
-
 void djStripCRLF(char *buf)
 {
 	// While last character in string is either CR or LF, remove.
@@ -189,10 +175,9 @@ void djStripCRLF(char *buf)
 		buf[strlen(buf)-1] = '\0';
 }
 
-void djAppendPathS(std::string& sPath,const char* szAppend)
+void djAppendPathS(std::string& sPath, const char* szAppend)
 {
-	//if (szPath==NULL)return;
-	if (szAppend==NULL||szAppend[0]==0)return;
+	if (szAppend==NULL || szAppend[0]==0) return;
 
 	// If doesn't have trailing slash, add one (unless szPath is empty string)
 	if (!sPath.empty())
@@ -200,11 +185,9 @@ void djAppendPathS(std::string& sPath,const char* szAppend)
 		char cLast = sPath.at( sPath.length()-1 );
 		if (cLast!='/' && cLast!='\\')
 		{
-			//strcat(szPath,"/");
-			sPath += L'/';
+			sPath += '/';
 		}
 	}
-	//strcat(szPath,szAppend);
 	sPath += szAppend;
 }
 
@@ -219,25 +202,16 @@ bool djFolderExists(const char* szPath)
 		(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
 }
 
-/*bool djFileExists(const char* szPath)
-{
-	DWORD fileAttr = ::GetFileAttributes(szPath);
-	if (0xFFFFFFFF == fileAttr)
-		return false;
-	return true;
-}*/
-
 bool djEnsureFolderTreeExists(const char* szPath)
 {
-	if (djFolderExists(szPath))return true;
-	// "Returns ERROR_SUCCESS if successful"
-	if (::SHCreateDirectoryEx(NULL,szPath,NULL)==ERROR_SUCCESS)
+	if (djFolderExists(szPath)) return true;
+	if (::SHCreateDirectoryEx(NULL, szPath, NULL) == ERROR_SUCCESS)
 		return true;
 	return false;
 }
 
 #else
-//#ifdef __APPLE__
+
 bool djFolderExists(const char* szPath)
 {
 	struct stat sb;
@@ -247,24 +221,12 @@ bool djFolderExists(const char* szPath)
 	}
 	return false;
 }
-/*
-bool djFileExists(const char* szPath)
-{
-	struct stat sb;
-	if (stat(szPath, &sb) == 0 && S_ISREG(sb.st_mode))
-	{
-		return true;
-	}
-	return false;
-}
-*/
 
-//[dj2018-03]https://stackoverflow.com/questions/675039/how-can-i-create-directory-tree-in-c-linux
 typedef struct stat Stat;
 static int do_mkdir(const char *path, mode_t mode)
 {
-	Stat            st;
-	int             status = 0;
+	Stat st;
+	int status = 0;
 
 	if (stat(path, &st) != 0)
 	{
@@ -278,20 +240,15 @@ static int do_mkdir(const char *path, mode_t mode)
 		status = -1;
 	}
 
-	return(status);
+	return status;
 }
-/**
-** mkpath - ensure all directories in path exist
-** Algorithm takes the pessimistic view and works top-down to ensure
-** each directory in path exists, rather than optimistically creating
-** the last element and working backwards.
-*/
+
 int mkpath(const char *path, mode_t mode)
 {
-	char           *pp;
-	char           *sp;
-	int             status;
-	char           *copypath = strdup(path);
+	char *pp;
+	char *sp;
+	int status;
+	char *copypath = strdup(path);
 
 	status = 0;
 	pp = copypath;
@@ -309,14 +266,14 @@ int mkpath(const char *path, mode_t mode)
 	if (status == 0)
 		status = do_mkdir(path, mode);
 	free(copypath);
-	return (status);
+	return status;
 }
+
 bool djEnsureFolderTreeExists(const char* szPath)
 {
-	if (djFolderExists(szPath))return true;
+	if (djFolderExists(szPath)) return true;
 	mkpath(szPath, 0777);
 	return djFolderExists(szPath);
 }
-//#else
 
 #endif

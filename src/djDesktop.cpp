@@ -91,6 +91,8 @@ bool CdjDesktop::LoadMouseCursorA(const char *szFilename, const char *szAlphaFil
 		m_pCursor = SDL_DisplayFormatAlpha(pSurface);
 		SDL_FreeSurface(pSurface);
 		SDL_Surface *pAlpha = SDL_LoadBMP(szAlphaFilename);
+		if (!pAlpha)
+			return false;
 		SDL_LockSurface(pAlpha);
 		SDL_LockSurface(m_pCursor);
 		int i, j;
@@ -100,11 +102,12 @@ bool CdjDesktop::LoadMouseCursorA(const char *szFilename, const char *szAlphaFil
 			{
 				UINT *pRow = (UINT*)((char*)m_pCursor->pixels + i*m_pCursor->pitch);
 				unsigned char ucAlpha = *( ((unsigned char*)pAlpha->pixels) + i*pAlpha->pitch + j );
-				*(pRow + j) = (*(pRow+j) &= (0x00FFFFFF | (ucAlpha << 24)));
+				*(pRow + j) = (*(pRow + j) & 0x00FFFFFF) | ((UINT)ucAlpha << 24);
 			}
 		}
 		SDL_UnlockSurface(m_pCursor);
 		SDL_UnlockSurface(pAlpha);
+		SDL_FreeSurface(pAlpha);
 		return true;
 	}
 	return false;

@@ -360,7 +360,7 @@ bool djList::OnEvent(SDL_Event &Event, SDLMod ModState)
 			m_bSelectionChanged = true;
 			return true;
 		case SDLK_DOWN:
-			if (m_nSelected<m_aItems.size()-1) m_nSelected++;
+			if (m_nSelected + 1 < (int)m_aItems.size()) m_nSelected++;
 			m_bSelectionChanged = true;
 			return true;
 		case SDLK_PAGEUP:
@@ -377,7 +377,7 @@ bool djList::OnEvent(SDL_Event &Event, SDLMod ModState)
 		case SDLK_PAGEDOWN:
 			if (m_aItems.size()>0)
 			{
-				int nNewSel = djMIN(m_aItems.size()-1, m_nSelected + m_nMax);
+				int nNewSel = djMIN((int)m_aItems.size() - 1, m_nSelected + m_nMax);
 				if (m_nSelected != nNewSel)
 				{
 					m_nSelected = nNewSel;
@@ -394,9 +394,9 @@ bool djList::OnEvent(SDL_Event &Event, SDLMod ModState)
 			}
 			return true;
 		case SDLK_END:
-			if (m_aItems.size()>0 && m_nSelected!=m_aItems.size()-1)
+			if (m_aItems.size()>0 && m_nSelected != (int)m_aItems.size() - 1)
 			{
-				m_nSelected = m_aItems.size()-1;
+				m_nSelected = (int)m_aItems.size() - 1;
 				m_bSelectionChanged = true;
 			}
 			return true;
@@ -439,14 +439,14 @@ bool djList::OnMouseButtonDown(int nButton)
 	// Scroll down
 	if (INBOUNDS(g_pScreen->m_nMouseX, g_pScreen->m_nMouseY, m_nScroll2X, m_nScroll2Y, m_nScroll2W, m_nScroll2H))
 	{
-		if (m_nSelected<m_aItems.size()-1) m_nSelected++;
+		if (m_nSelected + 1 < (int)m_aItems.size()) m_nSelected++;
 		m_bSelectionChanged = true;
 	}
 	if (INBOUNDS(g_pScreen->m_nMouseX, g_pScreen->m_nMouseY, m_nScroll1X, m_nScroll1Y+m_nScroll1H, m_nScroll2W, m_nScroll2Y-(m_nScroll1Y+m_nScroll1H)))
 	{
 		CdjFont *pFont = g_pScreen->m_pFont8x13;
 		int nSel = ((g_pScreen->m_nMouseY - (m_nScroll1Y+m_nScroll1H)) / pFont->GetH()) + m_nOffset;
-		if (nSel<m_aItems.size()-1)
+		if (nSel >= 0 && nSel < (int)m_aItems.size())
 		{
 			m_nSelected = nSel;
 			m_bSelectionChanged = true;
@@ -487,7 +487,7 @@ void djList::Draw(SDL_Surface *pSurface, int nX, int nY)
 		if (INBOUNDS(g_pScreen->m_nMouseX, g_pScreen->m_nMouseY, m_nScroll1X, m_nScroll1Y+m_nScroll1H, m_nScroll2W, m_nScroll2Y-(m_nScroll1Y+m_nScroll1H)))
 		{
 			int nSel = ((g_pScreen->m_nMouseY - (m_nScroll1Y+m_nScroll1H)) / pFont->GetH()) + m_nOffset;
-			if (nSel<m_aItems.size()-1)
+			if (nSel >= 0 && nSel < (int)m_aItems.size())
 				nMouseOver = nSel;
 		}
 		
@@ -496,7 +496,7 @@ void djList::Draw(SDL_Surface *pSurface, int nX, int nY)
 		for ( i=0; i<m_nMax; i++ )
 		{
 			int nItem = i+m_nOffset;
-			if (nItem<m_aItems.size())
+			if (nItem < (int)m_aItems.size())
 			{
 				if (nItem==m_nSelected && nItem==nMouseOver)
 				{
@@ -562,10 +562,10 @@ void djList::AddItem(const char *szItem)
 void djList::SetItem(int nRow, int nColumn, const char *szItem)
 {
 	// Make sure we have enough rows
-	while (m_aItems.size()-1<nRow)
+	while ((int)m_aItems.size() <= nRow)
 		AddItem("");
 	// Make sure we have enough columns in this row
-	while (m_aItems[nRow].asText.size()-1<nColumn)
+	while ((int)m_aItems[nRow].asText.size() <= nColumn)
 		m_aItems[nRow].asText.push_back("");
 	m_aItems[nRow].asText[nColumn] = szItem;
 }

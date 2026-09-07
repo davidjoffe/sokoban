@@ -1535,17 +1535,17 @@ void CSokoban::ChooseTileSet()
 bool CSokoban::STileSet::Load(const char *szDirectory, int nSize)
 {
 	char strbase[2048];
-	sprintf(strbase, "%ssokoban/themes/%s", GetDataPath().c_str(), szDirectory);
+	snprintf(strbase, sizeof(strbase), "%ssokoban/themes/%s", GetDataPath().c_str(), szDirectory);
 	if (strbase[strlen(strbase)-1]!='/' && strbase[strlen(strbase)-1]!='\\')
-		strcat(strbase, "/");
+		strncat(strbase, "/", sizeof(strbase) - strlen(strbase) - 1);
 
 	nW = nSize;
 	nH = nSize;
 
-	char str[2048];
+	char str[4096];
 	SDL_Surface *pSurface = NULL;
 
-	sprintf(str, "%ssprites%d.bmp", strbase, nSize);
+	snprintf(str, sizeof(str), "%ssprites%d.bmp", strbase, nSize);
 	pSurface = SDL_LoadBMP(str);
 	if (!pSurface)
 	{
@@ -1558,7 +1558,7 @@ bool CSokoban::STileSet::Load(const char *szDirectory, int nSize)
 	SDL_FreeSurface(pSurface);
 	
 	// Load borders
-	sprintf(str, "%sborders%d.bmp", strbase, nSize);
+	snprintf(str, sizeof(str), "%sborders%d.bmp", strbase, nSize);
 	pSurface = SDL_LoadBMP(str);
 	if (!pSurface)
 	{
