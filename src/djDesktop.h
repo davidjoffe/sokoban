@@ -1,58 +1,52 @@
 //---------------------------------------------------------------------------
 // djDesktop.h
 //
-// Copyright (C) 2001-2024 David Joffe
+// Copyright (C) 2001-2026 David Joffe & Contributors
 // https://grayskygames.com/
 //---------------------------------------------------------------------------
+
 #ifndef _DJDESKTOP_H_
 #define _DJDESKTOP_H_
 
 #include "djItem.h"
 #include "djFont.h"
 #include <string>
+#include <atomic>
 
-extern std::string GetDataPath();
+std::string GetDataPath();
 
-/*!\brief Desktop widget
-\author   David Joffe
-
-This is a special widget that forms the root of the widget tree. There
-is one instance of this widget for the application.
-*/
 class CdjDesktop : public CdjItem
 {
 public:
 	CdjDesktop();
-	virtual ~CdjDesktop();
+	~CdjDesktop() override;
 
-	virtual bool Initialize();
-	virtual bool Destroy();
-	virtual bool OnEvent(SDL_Event &Event, SDLMod ModState);
+	bool Initialize() override;
+	bool Destroy() override;
+	bool OnEvent(SDL_Event &Event, SDL_Keymod ModState) override;
 
-	virtual bool Update(float dt);
-	virtual bool UpdateAfter(float dt);
-	virtual void Draw(SDL_Surface *pSurface, int nX, int nY);
+	bool Update(float dt) override;
+	bool UpdateAfter(float dt) override;
+	void Draw(SDL_Renderer *pRenderer, int nX, int nY) override;
 
-	int InitSurface();
-	bool LoadMouseCursor(const char *szFilename);
+	int InitWindowAndRenderer();
 	bool LoadMouseCursorA(const char *szFilename, const char *szAlphaFilename);
-	void ShowCursor() { m_bShowCursor = true; }
-	void HideCursor() { m_bShowCursor = false; }
+	void ShowCursor() noexcept { m_bShowCursor = true; }
+	void HideCursor() noexcept { m_bShowCursor = false; }
 
-	bool m_bRunning;
+	std::atomic<bool> m_bRunning{true};
+	bool m_bShowCursor{true};
 
-	bool m_bShowCursor;
+	int m_nHotspotX{0};
+	int m_nHotspotY{0};
+	int m_nMouseX{0};
+	int m_nMouseY{0};
+	int m_nMouseXPrev{0};
+	int m_nMouseYPrev{0};
+	bool m_bFullScreen{false};
+	int m_nMouseButtons{0};
 
-	int m_nHotspotX; // Mouse cursor hotspot pixel offset X
-	int m_nHotspotY; // Mouse cursor hotspot pixel offset Y
-	int m_nMouseX;
-	int m_nMouseY;
-	int m_nMouseXPrev;
-	int m_nMouseYPrev;
-	bool m_bFullScreen;
-	int m_nMouseButtons;
-
-	void SetMousePos(int nX, int nY)
+	void SetMousePos(int nX, int nY) noexcept
 	{
 		m_nMouseXPrev = m_nMouseX;
 		m_nMouseYPrev = m_nMouseY;
@@ -60,31 +54,26 @@ public:
 		m_nMouseY = nY;
 	}
 
-	SDL_Surface *m_pCursor;
-	CdjFont *m_pFont;
-	CdjFont *m_pFont8x13;
-	CdjFont *m_pFont8x13B;
+	SDL_Texture *m_pCursor{nullptr};
+	CdjFont *m_pFont{nullptr};
+	CdjFont *m_pFont8x13{nullptr};
+	CdjFont *m_pFont8x13B{nullptr};
 
 	void DrawAll();
-
-	SDL_Surface *GetSurface() { return m_pSurface; }
+	SDL_Renderer *GetRenderer() const noexcept { return m_pRenderer; }
+	SDL_Window *GetWindow() const noexcept { return m_pWindow; }
 
 protected:
-	SDL_Surface *m_pSurface;
+	SDL_Window *m_pWindow{nullptr};
+	SDL_Renderer *m_pRenderer{nullptr};
 
-	// Set m_bFullScreen variable and update setting (g_Settings) to reflect the new value
 	void SetFullScreen(bool bFullScreen);
-	
-	bool m_bShowDebugInfo;	//!< Show debug info
-	//! Debug function
-	void DrawWidgetDebugInfo(CdjItem *pItem, int nScreenX=0, int nScreenY=0);
-	float m_fFPS;
+	bool m_bShowDebugInfo{false};
+	void DrawWidgetDebugInfo(CdjItem *pItem, int nScreenX = 0, int nScreenY = 0);
+	float m_fFPS{0.0f};
 };
 
-//! The main desktop widget, root of all other widgets
 extern CdjDesktop *g_pScreen;
-
-//! Set to true by anything if the screen should be redrawn
-extern bool g_bMustRedraw;
+extern std::atomic<bool> g_bMustRedraw;
 
 #endif

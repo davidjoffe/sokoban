@@ -1,45 +1,36 @@
 //---------------------------------------------------------------------------
 // djFont.h
 //
-// Copyright (C) 2002-2024 David Joffe
+// Copyright (C) 2002-2026 David Joffe & Contributors
 // https://grayskygames.com/
 //---------------------------------------------------------------------------
+
 #ifndef _DJFONT_H_
 #define _DJFONT_H_
 
-#include <SDL.h>
-#include <string.h>
+#include <SDL3/SDL.h>
+#include <cstring>
 #include "djUtils.h"
 
-//! Simple fixed-width raster font.
 class CdjFont
 {
 public:
-	//! Constructor
-	CdjFont();
-	//! Destructor
+	CdjFont() = default;
 	virtual ~CdjFont();
 
-	//! Initialize a font
-	bool LoadFont(const char *szTextureFilename, int nW, int nH);
-	//! Destroy font
+	bool LoadFont(SDL_Renderer *pRenderer, const char *szTextureFilename, int nW, int nH);
 	void Destroy();
 
-	//! Draw text onto pDest at (iX, iY)
-	int DrawText(SDL_Surface *pDest, int iX, int iY, const char *szStr);
+	int DrawText(SDL_Renderer *pDest, int iX, int iY, const char *szStr);
 
-	//! Get font character width [pixels]
-	int GetW() const { return m_nW; }
-	//! Get font character height [pixels]
-	int GetH() const { return m_nH; }
-
-	//! Return width in pixels that given string requires to be printed
-	int GetStringWidth(const char *szStr) const { return strlen(szStr)*m_nW; }
+	int GetW() const noexcept { return m_nW; }
+	int GetH() const noexcept { return m_nH; }
+	int GetStringWidth(const char *szStr) const noexcept { return szStr ? static_cast<int>(std::strlen(szStr)) * m_nW : 0; }
 
 protected:
-	SDL_Surface *m_pFontSurface;	//!< Font texture
-	int m_nW;						//!< Character width [pixels]
-	int m_nH;						//!< Character height [pixels]
+	SDL_Texture *m_pFontTexture{nullptr};
+	int m_nW{0};
+	int m_nH{0};
 };
 
 #endif
