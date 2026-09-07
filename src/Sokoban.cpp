@@ -10,6 +10,7 @@
 #include "djControls.h"
 #include "djDesktop.h"
 #include "djSettings.h"
+#include "GameRegistry.h"
 #include <fstream>
 #include <sstream>
 
@@ -659,9 +660,29 @@ void CSokoban::Draw(SDL_Surface *pSurface, int nX, int nY)
 		djDrawSprite(heroSprite, pSurface, pSprites, nX + iOffsetX + m_nHeroX * nSpriteSize, nY + iOffsetY + m_nHeroY * nSpriteSize, nSpriteSize, nSpriteSize);
 	}
 
-	if (m_pSokobanHeader)
-		djBlit(pSurface, m_pSokobanHeader, nX + m_nW - RIGHTBAR, nY);
+	//
+	// RIGHT BAR
+	//
 
+	// Sokoban header in top right
+	if (m_pSokobanHeader)
+	{
+		int headerX = nX + m_nW - RIGHTBAR;
+		int headerY = nY;
+		djBlit(pSurface, m_pSokobanHeader, headerX, headerY);
+
+		// Renderiza a versão dinamicamente a partir do registro de jogos
+		std::string sVer = "version " + g_GameRegistry.GetGameDescriptor(0).sVersion;
+		CdjFont *pVerFont = g_pScreen->m_pFont8x13;
+		if (pVerFont)
+		{
+			// Centralizado logo abaixo do logotipo "Sokoban"
+			int verX = headerX + (RIGHTBAR - pVerFont->GetStringWidth(sVer.c_str())) / 2;
+			pVerFont->DrawText(pSurface, verX, headerY + 48, sVer.c_str());
+		}
+	}
+
+	// Gray 'divider' separating game area and stuff on right
 	djDrawFilledRect(pSurface, nX + m_nW - RIGHTBAR, nY, 1, m_nH, SDL_MapRGB(pSurface->format, 60, 60, 60));
 
 	int nDY = pFont->GetH();
