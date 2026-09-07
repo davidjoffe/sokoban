@@ -1,19 +1,43 @@
-# dj2022 add a gitignore file
+# ==============================================================================
+# Still Yet Another Sokoban - .gitignore
+# ==============================================================================
 
-# Temporary object files during build
-src/*.o
-
-# Temporary Visual Studio stuff
-/VS/.vs/*
-# Visual Studio local settings probably should not be in repo
-/VS/VS.vcxproj.user
-# Temporary build products
-/VS/Release/*
-
-# Main application binary
+# Executáveis e binários compilados
 syasokoban
+*.bin
+*.exe
 
-# Mac Finder droppings
+# Arquivos objeto e bibliotecas intermediárias
+*.o
+*.a
+*.so
+*.dylib
+
+# Dumps do sistema e arquivos temporários do editor
+*~
+core
+*.swp
+*.swo
+
+# Arquivos de backup
+*.bak
+
+# Arquivos de log gerados pelo jogo
+syasokobanlog.txt
+Log_Assertions.txt
+*.log
+
+# Scripts auxiliares temporários de ajuste de assets
+inspect_banner.py
+patch_banner.py
+
+# Visual Studio (arquivos locais e temporários)
+/VS/.vs/
+/VS/Debug/
+/VS/Release/
+/VS/*.user
+/VS/*.suo
+/VS/*.pdb
+
+# Arquivos de sistema do macOS
 *.DS_Store
-
-
