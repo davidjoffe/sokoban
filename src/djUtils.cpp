@@ -1,279 +1,165 @@
 //---------------------------------------------------------------------------
 // djUtils.cpp
 //
-// Copyright (C) 2002-2024 David Joffe
+// Copyright (C) 2002-2026 David Joffe & Contributors
 // https://grayskygames.com/
 //---------------------------------------------------------------------------
 
 #include "djUtils.h"
-#include <string.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstring>
+#include <cstdarg>
+#include <cstdio>
+#include <cstdlib>
+#include <mutex>
+#include <filesystem>
+#include <iostream>
+
 #ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <io.h> // _finddata_t
-#include "Shlobj.h" // SHCreateDirectoryEx
-#else
-#include <dirent.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <errno.h>
 #endif
 
-char *djStrDup(const char *szSource)
-{
-	if (szSource)
-	{
-		char *szRet = new char[strlen(szSource)+1];
-		strcpy(szRet, szSource);
-		return szRet;
-	}
-	return NULL;
-}
+namespace fs = std::filesystem;
 
-FILE *g_pLog = NULL;
-
-void djLog(const char *szFormat, ...)
-{
-	// Log file only in debug mode
 #ifdef _DEBUG
-	if (g_pLog==NULL)
+static std::mutex g_logMutex;
+static FILE *g_pLog = nullptr;
+#endif
+
+void djLog([[maybe_unused]] const char *szFormat, ...)
+{
+#ifdef _DEBUG
+	std::lock_guard<std::mutex> lock(g_logMutex);
+	if (!g_pLog)
 	{
 		g_pLog = fopen("syasokobanlog.txt", "w");
 	}
-	char szBuf[1024];
+	char szBuf[2048];
 	va_list arg;
 	va_start(arg, szFormat);
-	vsprintf(szBuf, szFormat, arg);
-	strcat(szBuf, "\n");
+	vsnprintf(szBuf, sizeof(szBuf), szFormat, arg);
 	va_end(arg);
+
 #ifdef WIN32
-	::OutputDebugString(szBuf);
+	::OutputDebugStringA(szBuf);
+	::OutputDebugStringA("\n");
 #endif
 	if (g_pLog)
 	{
-		fprintf(g_pLog, "%s", szBuf);
+		fprintf(g_pLog, "%s\n", szBuf);
 		fflush(g_pLog);
 	}
 #endif
 }
 
-void djAssert(int nExpression, const char *szFile, int nLine, const char *szExpression)
+void djAssert(bool bExpression, const char *szFile, int nLine, const char *szExpression)
 {
-	if (nExpression==0)
+	if (!bExpression)
 	{
-		char szMsg[16384];
-		sprintf(szMsg, "Assertion failed (%s) in file %s at line %d", szExpression, szFile, nLine);
+		char szMsg[4096];
+		snprintf(szMsg, sizeof(szMsg), "Assertion failed (%s) in file %s at line %d", szExpression, szFile, nLine);
 		djLog("ASSERT: [%s]", szMsg);
-		#ifdef WIN32
-			// Save assertion to an assertion log file
-			FILE *pOut = fopen("Log_Assertions.txt", "a");
-			if (pOut)
-			{
-				fprintf(pOut, "%s\n", szMsg);
-				fclose(pOut);
-			}
-
-			// Tell user about this
-			::MessageBox(NULL, szMsg, "Program error!", MB_OK);
-		#else
-			printf("Error: %s", szMsg);
-		#endif
-
-		// fixme[h]: application needs a chance to handle this, e.g. to clean up SDL
-
-#ifdef _DEBUG
-		abort();
-#else
-		exit(-1);
-#endif
-	}
-}
 
 #ifdef WIN32
-
-int djStrCaseCmp(const char *sz1, const char *sz2)
-{
-	return stricmp(sz1, sz2);
-}
-
-void djFindFiles(const char *szDirectory, const char *szWildcard, std::vector<std::string> &asFiles)
-{
-	std::string s;
-	if (szDirectory) s = szDirectory;
-	s += szWildcard;
-	_finddata_t FD;
-	long hFile = _findfirst(s.c_str(), &FD);
-	if (hFile==-1) // Error
-		return;
-	while( hFile != -1L )
-	{
-		asFiles.push_back(FD.name);
-
-		if ( _findnext( hFile,  &FD ) == -1L )
-			break;
-	}
-
-	_findclose(hFile);
-}
-
-bool djFileExists(const char *szFilename)
-{
-	_finddata_t FD;
-	long hFile = _findfirst(szFilename, &FD);
-	if (hFile==-1L)
-		return false;
-	_findclose(hFile);
-	return true;
-}
-
-#else
-
-int djStrCaseCmp(const char *sz1, const char *sz2)
-{
-	return strcasecmp(sz1, sz2);
-}
-
-void djFindFiles(const char *szDirectory, const char *szWildcard, std::vector<std::string> &asFiles)
-{
-	DIR *dir = opendir(szDirectory ? szDirectory : ".");
-	if (!dir)
-	{
-		djLog("Error opening directory %s", szDirectory);
-		fflush(NULL);
-		return;
-	}
-
-	struct dirent* entry = (dirent *)NULL;
-	while ((entry = readdir(dir)))
-	{
-		if (entry->d_name[0] != '\0')
+		FILE *pOut = fopen("Log_Assertions.txt", "a");
+		if (pOut)
 		{
-			if (strstr(entry->d_name, szWildcard))
-				asFiles.push_back(entry->d_name);
+			fprintf(pOut, "%s\n", szMsg);
+			fclose(pOut);
+		}
+		::MessageBoxA(nullptr, szMsg, "Program error!", MB_OK | MB_ICONERROR);
+#else
+		std::cerr << "Error: " << szMsg << '\n';
+#endif
+
+#ifdef _DEBUG
+		std::abort();
+#else
+		std::exit(-1);
+#endif
+	}
+}
+
+int djStrCaseCmp(std::string_view s1, std::string_view s2)
+{
+	auto it1 = s1.begin();
+	auto it2 = s2.begin();
+	while (it1 != s1.end() && it2 != s2.end())
+	{
+		int c1 = std::tolower(static_cast<unsigned char>(*it1));
+		int c2 = std::tolower(static_cast<unsigned char>(*it2));
+		if (c1 != c2)
+			return c1 - c2;
+		++it1;
+		++it2;
+	}
+	if (s1.size() < s2.size()) return -1;
+	if (s1.size() > s2.size()) return 1;
+	return 0;
+}
+
+void djFindFiles(const std::string &sDirectory, const std::string &sWildcard, std::vector<std::string> &asFiles)
+{
+	std::error_code ec;
+	fs::path dirPath = sDirectory.empty() ? fs::current_path() : fs::path(sDirectory);
+
+	if (!fs::exists(dirPath, ec) || !fs::is_directory(dirPath, ec))
+		return;
+
+	for (const auto &entry : fs::directory_iterator(dirPath, ec))
+	{
+		if (entry.is_regular_file(ec))
+		{
+			std::string filename = entry.path().filename().string();
+			if (filename.find(sWildcard) != std::string::npos)
+			{
+				asFiles.push_back(filename);
+			}
 		}
 	}
-	closedir(dir);
+	std::sort(asFiles.begin(), asFiles.end());
 }
 
-bool djFileExists(const char *szFilename)
+bool djFileExists(const std::string &sFilename)
 {
-	struct stat sb;
-	if (stat(szFilename, &sb) == -1)
-		return false;
-	return true;
+	std::error_code ec;
+	return fs::is_regular_file(sFilename, ec);
 }
-
-#endif
 
 void djStripCRLF(char *buf)
 {
-	// While last character in string is either CR or LF, remove.
-	while (strlen(buf)>=1 && ((buf[strlen(buf)-1]=='\r') || (buf[strlen(buf)-1]=='\n')))
-		buf[strlen(buf)-1] = '\0';
-}
-
-void djAppendPathS(std::string& sPath, const char* szAppend)
-{
-	if (szAppend==NULL || szAppend[0]==0) return;
-
-	// If doesn't have trailing slash, add one (unless szPath is empty string)
-	if (!sPath.empty())
+	if (!buf) return;
+	size_t len = std::strlen(buf);
+	while (len > 0 && (buf[len - 1] == '\r' || buf[len - 1] == '\n'))
 	{
-		char cLast = sPath.at( sPath.length()-1 );
-		if (cLast!='/' && cLast!='\\')
-		{
-			sPath += '/';
-		}
+		buf[--len] = '\0';
 	}
-	sPath += szAppend;
 }
 
-//---------------------------------------------------------------------------
-
-#ifdef WIN32
-
-bool djFolderExists(const char* szPath)
+void djStripCRLF(std::string &str)
 {
-	DWORD dwAttrib = GetFileAttributes(szPath);
-	return (dwAttrib != INVALID_FILE_ATTRIBUTES && 
-		(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
-}
-
-bool djEnsureFolderTreeExists(const char* szPath)
-{
-	if (djFolderExists(szPath)) return true;
-	if (::SHCreateDirectoryEx(NULL, szPath, NULL) == ERROR_SUCCESS)
-		return true;
-	return false;
-}
-
-#else
-
-bool djFolderExists(const char* szPath)
-{
-	struct stat sb;
-	if (stat(szPath, &sb) == 0 && S_ISDIR(sb.st_mode))
+	while (!str.empty() && (str.back() == '\r' || str.back() == '\n'))
 	{
-		return true;
+		str.pop_back();
 	}
-	return false;
 }
 
-typedef struct stat Stat;
-static int do_mkdir(const char *path, mode_t mode)
+void djAppendPathS(std::string &sPath, std::string_view sAppend)
 {
-	Stat st;
-	int status = 0;
-
-	if (stat(path, &st) != 0)
-	{
-		/* Directory does not exist. EEXIST for race condition */
-		if (mkdir(path, mode) != 0 && errno != EEXIST)
-			status = -1;
-	}
-	else if (!S_ISDIR(st.st_mode))
-	{
-		errno = ENOTDIR;
-		status = -1;
-	}
-
-	return status;
+	if (sAppend.empty()) return;
+	fs::path p(sPath);
+	p /= sAppend;
+	sPath = p.string();
 }
 
-int mkpath(const char *path, mode_t mode)
+bool djFolderExists(const std::string &sPath)
 {
-	char *pp;
-	char *sp;
-	int status;
-	char *copypath = strdup(path);
-
-	status = 0;
-	pp = copypath;
-	while (status == 0 && (sp = strchr(pp, '/')) != 0)
-	{
-		if (sp != pp)
-		{
-			/* Neither root nor double slash in path */
-			*sp = '\0';
-			status = do_mkdir(copypath, mode);
-			*sp = '/';
-		}
-		pp = sp + 1;
-	}
-	if (status == 0)
-		status = do_mkdir(path, mode);
-	free(copypath);
-	return status;
+	std::error_code ec;
+	return fs::is_directory(sPath, ec);
 }
 
-bool djEnsureFolderTreeExists(const char* szPath)
+bool djEnsureFolderTreeExists(const std::string &sPath)
 {
-	if (djFolderExists(szPath)) return true;
-	mkpath(szPath, 0777);
-	return djFolderExists(szPath);
+	std::error_code ec;
+	return fs::create_directories(sPath, ec) || fs::is_directory(sPath, ec);
 }
-
-#endif

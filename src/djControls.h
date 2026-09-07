@@ -1,113 +1,101 @@
 //---------------------------------------------------------------------------
 // djControls.h
 //
-// Copyright (C) 2001-2024 David Joffe
+// Copyright (C) 2001-2026 David Joffe & Contributors
 // https://grayskygames.com/
 //---------------------------------------------------------------------------
+
 #ifndef _DJCONTROLS_H_
 #define _DJCONTROLS_H_
 
 #include "djItem.h"
 #include <string>
+#include <string_view>
+#include <vector>
 
-//___________________________________________________________________________
-//
-// CdjButton
-//___________________________________________________________________________
-
-/*!\brief Button widget.
-\author   David Joffe
-
-Related: \ref CdjItem
-*/
 class CdjButton : public CdjItem
 {
 public:
-	//! Constructor
-	CdjButton();
-	//! Destructor
-	virtual ~CdjButton();
+	CdjButton() = default;
+	~CdjButton() override = default;
 
-	//! Set button text
-	void SetText(const char *szNormal, const char *szHighlighted=NULL, const char *szSelected=NULL);
+	void SetText(std::string_view sNormal, std::string_view sHighlighted = {}, std::string_view sSelected = {});
 
-	virtual bool OnEvent(SDL_Event &Event, SDLMod ModState);
-	virtual void OnMouseEnter(int nX, int nY) { m_nState = 1; }
-	virtual void OnMouseLeave() { m_nState = 0; }
-	virtual bool OnMouseButtonDown(int nButton) { m_nState = 2; return true; }
-	virtual bool OnMouseButtonUp(int nButton) { if (m_nState==2) m_bPressed = true; m_nState = 1; return true; }
-	virtual void Draw(SDL_Surface *pSurface, int nX, int nY);
+	bool OnEvent(SDL_Event &Event, SDLMod ModState) override;
+	void OnMouseEnter(int, int) override { m_nState = 1; }
+	void OnMouseLeave() override { m_nState = 0; }
+	bool OnMouseButtonDown(int) override { m_nState = 2; return true; }
+	bool OnMouseButtonUp(int) override
+	{
+		if (m_nState == 2) m_bPressed = true;
+		m_nState = 1;
+		return true;
+	}
+	void Draw(SDL_Surface *pSurface, int nX, int nY) override;
 
-	bool WasPressed();
-	// If has focus, will generate 'press' event on 'Enter' pressed
-	void SetFocus(bool bFocus) { m_bFocus = bFocus; }
+	bool WasPressed() noexcept
+	{
+		if (m_bPressed) { m_bPressed = false; return true; }
+		return false;
+	}
+	void SetFocus(bool bFocus) noexcept { m_bFocus = bFocus; }
 
 protected:
-	char *m_szNormal;
-	char *m_szHighlighted;
-	char *m_szSelected;
-	int m_nState;
-	bool m_bPressed;
-	bool m_bFocus;
+	std::string m_sNormal;
+	std::string m_sHighlighted;
+	std::string m_sSelected;
+	int m_nState{0};
+	bool m_bPressed{false};
+	bool m_bFocus{false};
 };
-
-//___________________________________________________________________________
-//
-// djTextEdit
-//___________________________________________________________________________
 
 class djTextEdit : public CdjItem
 {
 public:
-	djTextEdit();
-	virtual ~djTextEdit();
+	djTextEdit() = default;
+	~djTextEdit() override = default;
 
-	virtual void SetText(const char *szLabel, const char *szDefaultValue);
+	void SetText(std::string_view sLabel, std::string_view sDefaultValue);
 
-	virtual bool OnEvent(SDL_Event &Event, SDLMod ModState);
-	virtual bool Update(float dt);
-	virtual void Draw(SDL_Surface *pSurface, int nX, int nY);
+	bool OnEvent(SDL_Event &Event, SDLMod ModState) override;
+	bool Update(float dt) override;
+	void Draw(SDL_Surface *pSurface, int nX, int nY) override;
 
-	bool IsConfirmed() const { return m_bConfirmed; }
-	const char *GetText() const { return m_sText.c_str(); }
+	bool IsConfirmed() const noexcept { return m_bConfirmed; }
+	const char *GetText() const noexcept { return m_sText.c_str(); }
 
 protected:
 	void InsertChar(char c);
 
-	char *m_szLabel;
+	std::string m_sLabel;
 	std::string m_sText;
-	unsigned int m_nPos;
-	UINT m_uMaxLen;
-	float m_fBlinkTimer;
-	bool m_bConfirmed;
+	size_t m_nPos{0};
+	size_t m_uMaxLen{40};
+	float m_fBlinkTimer{0.0f};
+	bool m_bConfirmed{false};
 };
-
-//___________________________________________________________________________
-//
-// djList
-//___________________________________________________________________________
 
 class djList : public CdjItem
 {
 public:
-	djList();
-	virtual ~djList();
+	djList() = default;
+	~djList() override = default;
 
-	virtual bool OnEvent(SDL_Event &Event, SDLMod ModState);
-	virtual void OnMouseEnter(int nX, int nY);
-	virtual bool OnMouseMove(int nX, int nY, int nDX, int nDY);
-	virtual void OnMouseLeave();
-	virtual bool OnMouseButtonDown(int nButton);
-	virtual bool OnMouseButtonUp(int nButton);
-	virtual bool Update(float dt);
-	virtual void Draw(SDL_Surface *pSurface, int nX, int nY);
+	bool OnEvent(SDL_Event &Event, SDLMod ModState) override;
+	void OnMouseEnter(int nX, int nY) override;
+	bool OnMouseMove(int nX, int nY, int nDX, int nDY) override;
+	void OnMouseLeave() override;
+	bool OnMouseButtonDown(int nButton) override;
+	bool OnMouseButtonUp(int nButton) override;
+	bool Update(float dt) override;
+	void Draw(SDL_Surface *pSurface, int nX, int nY) override;
 
-	void AddItem(const char *szItem);
-	void SetItem(int nRow, int nColumn, const char *szItem);
+	void AddItem(std::string_view sItem);
+	void SetItem(size_t nRow, size_t nColumn, std::string_view sItem);
 
-	bool SelectionChanged();
-	void SetSelection(int nSelected);
-	int GetSelection();
+	bool SelectionChanged() noexcept;
+	void SetSelection(int nSelected) noexcept { m_nSelected = nSelected; }
+	int GetSelection() const noexcept { return m_nSelected; }
 
 protected:
 	struct tsItem
@@ -116,48 +104,43 @@ protected:
 	};
 	std::vector<tsItem> m_aItems;
 
-	int m_nMX;
-	int m_nMY;
+	int m_nMX{-1};
+	int m_nMY{-1};
+	int m_nMax{-1};
 
-	int m_nMax;
-	int m_nScroll1X;
-	int m_nScroll1Y;
-	int m_nScroll1W;
-	int m_nScroll1H;
-	int m_nScroll2X;
-	int m_nScroll2Y;
-	int m_nScroll2W;
-	int m_nScroll2H;
+	int m_nScroll1X{-1};
+	int m_nScroll1Y{-1};
+	int m_nScroll1W{-1};
+	int m_nScroll1H{-1};
 
-	int m_nSelected;
-	int m_nOffset;
-	bool m_bSelectionChanged;
+	int m_nScroll2X{-1};
+	int m_nScroll2Y{-1};
+	int m_nScroll2W{-1};
+	int m_nScroll2H{-1};
+
+	int m_nSelected{0};
+	int m_nOffset{0};
+	bool m_bSelectionChanged{false};
 };
-
-//___________________________________________________________________________
-//
-// djMessageBox
-//___________________________________________________________________________
 
 class djMessageBox : public CdjItem
 {
 public:
-	djMessageBox(const char *szText);
-	virtual ~djMessageBox();
+	explicit djMessageBox(std::string_view sText);
+	~djMessageBox() override = default;
 
-	virtual bool Initialize();
+	bool Initialize() override;
+	bool Update(float dt) override;
+	bool OnEvent(SDL_Event &Event, SDLMod ModState) override;
+	void Draw(SDL_Surface *pSurface, int nX, int nY) override;
 
-	virtual bool Update(float dt);
-	virtual bool OnEvent(SDL_Event &Event, SDLMod ModState);
-	virtual void Draw(SDL_Surface *pSurface, int nX, int nY);
-
-	bool m_bClose;
-	int m_nRet;
+	bool m_bClose{false};
+	int m_nRet{0};
 
 protected:
 	std::string m_sText;
-	CdjButton *m_pOK;
-	CdjButton *m_pCancel;
+	CdjButton *m_pOK{nullptr};
+	CdjButton *m_pCancel{nullptr};
 };
 
 #endif

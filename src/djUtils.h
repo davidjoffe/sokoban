@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 // djUtils.h
 //
-// Copyright (C) 2002-2024 David Joffe
+// Copyright (C) 2002-2026 David Joffe & Contributors
 // https://grayskygames.com/
 //---------------------------------------------------------------------------
 
@@ -9,56 +9,65 @@
 #define _DJUTILS_H_
 
 #include <string>
+#include <string_view>
 #include <vector>
-
-//! Make a deep copy of string szSource. Returns NULL if NULL is passed.
-extern char *djStrDup(const char *szSource);
-
-//! Scalar delete helper macro.
-#define djDEL(p) if (p!=NULL) { delete p; p = NULL; }
-//! Vector delete helper macro.
-#define djDELV(p) if (p!=NULL) { delete []p; p = NULL; }
-
-//! Min
-#define djMIN(a,b) ((a)<(b)?(a):(b))
-//! Max
-#define djMAX(a,b) ((a)>(b)?(a):(b))
-//! Absolute value
-#define djABS(a) ((a)<0?-(a):(a))
-
-//! Write a debug message
-extern void djLog(const char *szFormat, ...);
+#include <algorithm>
 
 #ifndef UINT
 typedef unsigned int UINT;
 #endif
 
-//! If nExpression is zero, displays a message box which includes the
-//! error szExpression, and stops the application. You should not call
-//! this directly, you should call either djASSERT() or djASSERTD().
-extern void djAssert(int nExpression, const char *szFile, int nLine, const char *szExpression);
+//! Deleters inline modernos e seguros
+template <typename T>
+inline void djDEL(T*& p) noexcept
+{
+	delete p;
+	p = nullptr;
+}
 
-#define djASSERT(Expression) djAssert((int)Expression, __FILE__, __LINE__, #Expression)
+template <typename T>
+inline void djDELV(T*& p) noexcept
+{
+	delete[] p;
+	p = nullptr;
+}
+
+//! Min / Max / Abs helpers
+template <typename T>
+constexpr const T& djMIN(const T& a, const T& b) { return (a < b) ? a : b; }
+
+template <typename T>
+constexpr const T& djMAX(const T& a, const T& b) { return (a > b) ? a : b; }
+
+template <typename T>
+constexpr T djABS(const T& a) { return (a < 0) ? -a : a; }
+
+//! Write a thread-safe debug message
+void djLog(const char *szFormat, ...);
+
+//! Assertion helper
+void djAssert(bool bExpression, const char *szFile, int nLine, const char *szExpression);
+
+#define djASSERT(Expression) djAssert(static_cast<bool>(Expression), __FILE__, __LINE__, #Expression)
 
 #ifdef _DEBUG
 #define djASSERTD(Expression) djASSERT(Expression)
 #else
-#define djASSERTD(Expression)
+#define djASSERTD(Expression) ((void)0)
 #endif
 
-extern int djStrCaseCmp(const char *sz1, const char *sz2);
+int djStrCaseCmp(std::string_view s1, std::string_view s2);
 
-extern void djFindFiles(const char *szDirectory, const char *szWildcard, std::vector<std::string> &asFiles);
-extern bool djFileExists(const char *szFilename);
+void djFindFiles(const std::string &sDirectory, const std::string &sWildcard, std::vector<std::string> &asFiles);
+bool djFileExists(const std::string &sFilename);
 
-//! Strip newline character from end of string (handles UNIX, Mac and DOS text file formats)
-extern void djStripCRLF(char *buf);
+//! Strip newline character from end of string
+void djStripCRLF(char *buf);
+void djStripCRLF(std::string &str);
 
+void djAppendPathS(std::string &sPath, std::string_view sAppend);
 
-extern void djAppendPathS(std::string& sPath,const char* szAppend);
-
-extern bool djFolderExists(const char* szPath);
-//extern bool djFileExists(const char* szPath);
-extern bool djEnsureFolderTreeExists(const char* szPath);
+bool djFolderExists(const std::string &sPath);
+bool djEnsureFolderTreeExists(const std::string &sPath);
 
 #endif

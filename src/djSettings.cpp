@@ -1,173 +1,134 @@
 //---------------------------------------------------------------------------
 // djSettings.cpp
 //
-// Copyright (C) 2001-2024 David Joffe
+// Copyright (C) 2001-2026 David Joffe & Contributors
 // https://grayskygames.com/
 //---------------------------------------------------------------------------
+
 #include "djSettings.h"
 #include "djUtils.h"
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include <fstream>
+#include <sstream>
 
 std::string g_sConfigFile;
+CdjSettings g_Settings;
 
 void CommitSettings()
 {
-	// Commit settings change
 	g_Settings.SaveSettings(g_sConfigFile.c_str());
-}
-
-CdjSettings g_Settings;
-
-//___________________________________________________________________________
-//
-// CdjSettings
-//___________________________________________________________________________
-
-CdjSettings::CdjSettings()
-{
-}
-
-CdjSettings::~CdjSettings()
-{
-	ClearAllSettings();
 }
 
 bool CdjSettings::LoadSettings(const char *szFilename)
 {
-	char buf[8192]={0};
-	FILE *pIn = fopen(szFilename, "r");
-	if (pIn==NULL)
+	std::lock_guard<std::mutex> lock(m_mutex);
+	std::ifstream in(szFilename);
+	if (!in.is_open())
 		return false;
-	fgets(buf, sizeof(buf), pIn);
-	djStripCRLF(buf); // Strip newline char(s)
-	while (!feof(pIn))
+
+	m_aSettings.clear();
+	std::string line;
+	while (std::getline(in, line))
 	{
-		char *sz = strchr(buf, '=');
-		if (sz)
+		djStripCRLF(line);
+		size_t pos = line.find('=');
+		if (pos != std::string::npos)
 		{
-			*sz = 0;
-			sz++;
-			SdjSetting Setting;
-			Setting.szKey   = new char[strlen(buf)+1];
-			Setting.szValue = new char[strlen(sz)+1];
-			strcpy(Setting.szKey,   buf);
-			strcpy(Setting.szValue, sz);
-			m_aSettings.push_back(Setting);
+			std::string key = line.substr(0, pos);
+			std::string val = line.substr(pos + 1);
+			m_aSettings.push_back({std::move(key), std::move(val)});
 		}
-		fgets(buf, sizeof(buf), pIn);
-		djStripCRLF(buf); // Strip newline char(s)
 	}
-	fclose(pIn);
 	return true;
 }
 
-bool CdjSettings::SaveSettings(const char *szFilename)
+bool CdjSettings::SaveSettings(const char *szFilename) const
 {
-	FILE *pOut = fopen(szFilename, "w");
-	if (pOut==NULL)
+	std::lock_guard<std::mutex> lock(m_mutex);
+	std::ofstream out(szFilename);
+	if (!out.is_open())
 		return false;
-	for ( int i=0; i<(int)m_aSettings.size(); i++ )
+
+	for (const auto &item : m_aSettings)
 	{
-		fprintf(pOut, "%s=%s\n", m_aSettings[i].szKey, m_aSettings[i].szValue);
+		out << item.sKey << '=' << item.sValue << '\n';
 	}
-	fclose(pOut);
 	return true;
 }
 
-void CdjSettings::SetSetting(const char *szKey, const char *szValue)
+void CdjSettings::SetSetting(std::string_view sKey, std::string_view sValue)
 {
-	// Try to find existing and change it if it exists
-	for ( int i=0; i<(int)m_aSettings.size(); i++ )
+	std::lock_guard<std::mutex> lock(m_mutex);
+	for (auto &item : m_aSettings)
 	{
-		if (!strcmp(szKey, m_aSettings[i].szKey))
+		if (item.sKey == sKey)
 		{
-			delete[] m_aSettings[i].szValue;
-			m_aSettings[i].szValue = new char[strlen(szValue)+1];
-			strcpy(m_aSettings[i].szValue, szValue);
+			item.sValue = std::string(sValue);
 			return;
 		}
 	}
-	// New setting
-	SdjSetting Setting;
-	Setting.szKey   = new char[strlen(szKey)+1];
-	Setting.szValue = new char[strlen(szValue)+1];
-	strcpy(Setting.szKey, szKey);
-	strcpy(Setting.szValue, szValue);
-	m_aSettings.push_back(Setting);
+	m_aSettings.push_back({std::string(sKey), std::string(sValue)});
 }
 
-void CdjSettings::SetSettingBool(const char *szKey, bool bValue)
+void CdjSettings::SetDefaultSetting(std::string_view sKey, std::string_view sValue)
 {
-	char szBuf[128]={0};
-	sprintf(szBuf, "%d", bValue ? 1 : 0);
-	SetSetting(szKey, szBuf);
-}
-
-void CdjSettings::SetSettingInt(const char *szKey, int nValue)
-{
-	char szBuf[128]={0};
-	sprintf(szBuf, "%d", nValue);
-	SetSetting(szKey, szBuf);
-}
-
-void CdjSettings::SetSettingFloat(const char *szKey, float fValue)
-{
-	char szBuf[128]={0};
-	sprintf(szBuf, "%f", fValue);
-	SetSetting(szKey, szBuf);
-}
-
-void CdjSettings::SetDefaultSetting(const char *szKey, const char *szValue)
-{
-	if (FindSetting(szKey))
+	if (FindSetting(sKey))
 		return;
-	SetSetting(szKey, szValue);
+	SetSetting(sKey, sValue);
 }
 
-char *CdjSettings::FindSetting(const char *szKey)
+void CdjSettings::SetSettingBool(std::string_view sKey, bool bValue)
 {
-	for ( int i=0; i<(int)m_aSettings.size(); i++ )
+	SetSetting(sKey, bValue ? "1" : "0");
+}
+
+void CdjSettings::SetSettingInt(std::string_view sKey, int nValue)
+{
+	SetSetting(sKey, std::to_string(nValue));
+}
+
+void CdjSettings::SetSettingFloat(std::string_view sKey, float fValue)
+{
+	SetSetting(sKey, std::to_string(fValue));
+}
+
+const char *CdjSettings::FindSetting(std::string_view sKey) const
+{
+	std::lock_guard<std::mutex> lock(m_mutex);
+	for (const auto &item : m_aSettings)
 	{
-		if (!strcmp(szKey, m_aSettings[i].szKey))
-			return m_aSettings[i].szValue;
+		if (item.sKey == sKey)
+			return item.sValue.c_str();
 	}
-	return NULL;
+	return nullptr;
 }
 
 void CdjSettings::ClearAllSettings()
 {
-	for ( int i=0; i<(int)m_aSettings.size(); i++ )
-	{
-		delete[] m_aSettings[i].szKey;
-		delete[] m_aSettings[i].szValue;
-	}
+	std::lock_guard<std::mutex> lock(m_mutex);
 	m_aSettings.clear();
 }
-	
-bool CdjSettings::GetSettingBool(const char *szKey, bool bDefaultValue)
+
+bool CdjSettings::GetSettingBool(std::string_view sKey, bool bDefaultValue) const
 {
-	const char *sz = FindSetting(szKey);
-	if (sz==NULL || sz[0]==0)
+	const char *val = FindSetting(sKey);
+	if (!val || val[0] == '\0')
 		return bDefaultValue;
-	if (sz[0]=='0' || sz[0]=='f' || sz[0]=='F' || sz[0]=='n' || sz[0]=='N')
-		return false;
-	return true;
+	char c = val[0];
+	return !(c == '0' || c == 'f' || c == 'F' || c == 'n' || c == 'N');
 }
 
-int CdjSettings::GetSettingInt(const char *szKey, int nDefaultValue)
+int CdjSettings::GetSettingInt(std::string_view sKey, int nDefaultValue) const
 {
-	const char *sz = FindSetting(szKey);
-	if (sz==NULL || sz[0]==0)
+	const char *val = FindSetting(sKey);
+	if (!val || val[0] == '\0')
 		return nDefaultValue;
-	return atoi(sz);
+	return std::atoi(val);
 }
 
-float CdjSettings::GetSettingFloat(const char *szKey, float fDefaultValue)
+float CdjSettings::GetSettingFloat(std::string_view sKey, float fDefaultValue) const
 {
-	const char *sz = FindSetting(szKey);
-	if (sz==NULL || sz[0]==0)
+	const char *val = FindSetting(sKey);
+	if (!val || val[0] == '\0')
 		return fDefaultValue;
-	return atof(sz);
+	return static_cast<float>(std::atof(val));
 }

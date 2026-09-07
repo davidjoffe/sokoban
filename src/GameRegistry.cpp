@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 // GameRegistry.cpp
 //
-// Copyright (C) 2002-2024 David Joffe
+// Copyright (C) 2002-2026 David Joffe & Contributors
 // https://grayskygames.com/
 //---------------------------------------------------------------------------
 
@@ -10,61 +10,43 @@
 
 CGameRegistry g_GameRegistry;
 
-CGameRegistry::CGameRegistry()
+bool CGameRegistry::RegisterGame(
+	std::string_view sClassName,
+	std::string_view sName,
+	std::string_view sVersion,
+	std::string_view sWindowTitle,
+	PROC_ALLOCATEGAME pProcAllocate)
 {
-}
-
-CGameRegistry::~CGameRegistry()
-{
-	for ( int i=0; i<(int)m_aDescriptors.size(); i++ )
-	{
-		djDELV(m_aDescriptors[i].szClassName);
-		djDELV(m_aDescriptors[i].szName);
-		djDELV(m_aDescriptors[i].szVersion);
-		djDELV(m_aDescriptors[i].szWindowTitle);
-	}
-	m_aDescriptors.clear();
-}
-
-bool CGameRegistry::RegisterGame(const char *szClassName, const char *szName, const char *szVersion, const char *szWindowTitle, PROC_ALLOCATEGAME pProcAllocate)
-{
-	SGameDescriptor GD;
-	GD.szClassName = djStrDup(szClassName);
-	GD.szName = djStrDup(szName);
-	GD.szVersion = djStrDup(szVersion);
-	GD.szWindowTitle = djStrDup(szWindowTitle);
-	GD.pProcAllocate = pProcAllocate;
-	m_aDescriptors.push_back(GD);
+	m_aDescriptors.push_back({
+		std::string(sClassName),
+		std::string(sName),
+		std::string(sVersion),
+		std::string(sWindowTitle),
+		pProcAllocate
+	});
 	return true;
 }
 
-void CGameRegistry::UnregisterGame(const char *szClassName)
+void CGameRegistry::UnregisterGame(std::string_view sClassName)
 {
-	for ( int i=0; i<(int)m_aDescriptors.size(); i++ )
-	{
-		if (!strcmp(m_aDescriptors[i].szClassName, szClassName))
-		{
-			djDELV(m_aDescriptors[i].szClassName);
-			djDELV(m_aDescriptors[i].szName);
-			djDELV(m_aDescriptors[i].szVersion);
-			djDELV(m_aDescriptors[i].szWindowTitle);
-			return;
-		}
-	}
-	djASSERT(0); // Not found
+	std::erase_if(m_aDescriptors, [sClassName](const SGameDescriptor &gd) {
+		return gd.sClassName == sClassName;
+	});
 }
 
-CdjItem *CGameRegistry::AllocateGameByIndex(UINT uIndex)
+CdjItem *CGameRegistry::AllocateGameByIndex(size_t uIndex)
 {
-	return (m_aDescriptors[uIndex].pProcAllocate)();
+	if (uIndex < m_aDescriptors.size() && m_aDescriptors[uIndex].pProcAllocate)
+		return (m_aDescriptors[uIndex].pProcAllocate)();
+	return nullptr;
 }
 
-CdjItem *CGameRegistry::AllocateGame(const char *szClassName)
+CdjItem *CGameRegistry::AllocateGame(std::string_view sClassName)
 {
-	for ( UINT i=0; i<m_aDescriptors.size(); i++ )
+	for (const auto &gd : m_aDescriptors)
 	{
-		if (!strcmp(m_aDescriptors[i].szClassName, szClassName))
-			return (m_aDescriptors[i].pProcAllocate)();
+		if (gd.sClassName == sClassName && gd.pProcAllocate)
+			return (gd.pProcAllocate)();
 	}
-	return NULL;
+	return nullptr;
 }
